@@ -1,569 +1,196 @@
-# 🎙️ InterviewIQ
+# PrepView
 
-> **An AI-powered Voice Interview Platform that simulates real technical interviews through natural conversations.**
+> An AI-powered mock interview platform with voice & text modes, real-time evaluation, and comprehensive performance reporting.
 
-InterviewIQ is designed to replicate the experience of a real technical interview. Instead of typing answers into a chatbot, candidates interact with an AI interviewer using their voice. The AI asks questions, listens to spoken responses, maintains conversational context, generates intelligent follow-up questions, and provides a comprehensive interview report after the interview ends.
-
-> 🚧 **Status:** Under Active Development
+**Live Demo:** [prepview.vercel.app](https://prepview.vercel.app)
 
 ---
 
-# ✨ Features
+## Features
 
-## 🎤 AI Voice Interview
+**AI Interview Engine**
 
-- Natural voice conversations with an AI interviewer
-- AI-generated technical interview questions
-- Context-aware follow-up questions
-- Technical, Behavioral, and Mixed interview modes
-- Multiple difficulty levels
-- Real interview-like conversational flow
+- Voice and Text interview modes
+- 10-question adaptive sessions powered by Google Gemini 2.5 Flash
+- Context-aware follow-up questions based on your previous answers
+- Technical and Behavioral interview types
+- Easy / Medium / Hard difficulty levels
+- Company-specific targeting and tech stack focus
 
----
+**AI Evaluation & Reporting**
 
-## 🧠 AI-Powered Evaluation
+- Per-question silent evaluation (Technical Accuracy, Reasoning, Communication)
+- Final comprehensive report with Overall, Technical, Communication, and Problem Solving scores
+- Strengths and Areas to Improve breakdown
+- Full Q&A transcript review
 
-During the interview, the AI continuously evaluates responses internally to understand the candidate's performance and generate better follow-up questions.
+**Resume Analyzer**
 
-**Individual question scores are NOT shown to the user.**
+- Upload a PDF or TXT resume
+- Paste a job description
+- Receive AI-generated match analysis and improvement suggestions
 
-After the interview ends, InterviewIQ generates a comprehensive AI report including:
+**Dashboard**
 
-- Overall Interview Score
-- Technical Performance
-- Communication Assessment
-- Problem Solving Analysis
-- Key Strengths
-- Areas for Improvement
-- AI-generated Interview Summary
-
----
-
-## 📊 Dashboard
-
-- Recent Interviews
-- Total Interviews
-- Average Interview Score
-- Completed Interviews
-- Interview History
+- Total, Completed, and Pending interview counts
+- Average score across all sessions
+- Performance history chart
+- Recent interviews list
 
 ---
 
-## 🔐 Authentication
+## Tech Stack
 
-- User Registration
-- User Login
-- JWT Authentication
-- HTTP-only Cookie Authentication
-- Protected Routes
-
----
-
-# 🚀 Upcoming Features (V2)
-
-- Resume-based Interview Generation
-- Personalized Learning Roadmaps
-- Company-specific Interview Modes
-- Adaptive Interviewing
-- AI Interview Analytics
-- Coding Interview Mode
-- HR Interview Mode
-- Mock System Design Interviews
+| Layer        | Technologies                                  |
+| ------------ | --------------------------------------------- |
+| Frontend     | React 19, TypeScript, Vite, Tailwind CSS v4   |
+| State / Data | TanStack Query, Zustand, React Hook Form, Zod |
+| Backend      | Node.js, Express, TypeScript                  |
+| Database     | MongoDB (Atlas), Mongoose                     |
+| Auth         | JWT, httpOnly Cookies, bcrypt                 |
+| AI           | Google Gemini 2.5 Flash (`@google/genai`)     |
+| Infra        | Docker, Render (API), Vercel (Frontend)       |
 
 ---
 
-# 💡 What Makes InterviewIQ Different?
+## Project Structure
 
-Unlike traditional interview platforms where users type responses or answer predefined questions, InterviewIQ conducts a natural voice conversation.
-
-The AI interviewer:
-
-- Speaks using Text-to-Speech
-- Listens using Speech-to-Text
-- Understands conversational context
-- Asks intelligent follow-up questions
-- Conducts interviews similar to a human interviewer
-- Generates a complete evaluation only after the interview is finished
-
-The goal is to create an interview experience that feels as close as possible to a real technical interview.
-
----
-
-# 🏗️ Tech Stack
-
-## Frontend
-
-- React
-- TypeScript
-- Vite
-- React Router
-- Tailwind CSS
-- TanStack Query
-- Axios
-- React Hook Form
-- Zod
-
----
-
-## Backend
-
-- Node.js
-- Express.js
-- TypeScript
-- MongoDB
-- Mongoose
-- JWT Authentication
-- Cookie Parser
-- bcrypt
-- Zod Validation
-
----
-
-## AI
-
-- Google Gemini
-- Speech-to-Text _(In Progress)_
-- Text-to-Speech _(In Progress)_
-
----
-
-# 📂 Project Structure
-
-```text
-InterviewIQ/
-
-├── client/
+```
+PrepView/
+├── client/                   # React SPA (Vite)
 │   ├── src/
-│   │
-│   ├── api/
-│   ├── assets/
-│   ├── components/
-│   ├── features/
-│   │   ├── auth/
-│   │   ├── dashboard/
-│   │   └── interview/
-│   │
-│   ├── hooks/
-│   ├── layouts/
-│   ├── pages/
-│   ├── routes/
-│   └── types/
+│   │   ├── api/              # Axios API functions
+│   │   ├── components/       # Shared UI components (shadcn/ui)
+│   │   ├── context/          # AuthContext
+│   │   ├── hooks/            # useInterviewSession, useDashboard, useAuth, etc.
+│   │   ├── pages/            # Route-level pages
+│   │   ├── routes/           # Protected & public route guards
+│   │   ├── schemas/          # Zod form validation schemas
+│   │   └── types/            # TypeScript interfaces
+│   ├── vercel.json           # Vercel reverse proxy config
+│   └── Dockerfile
 │
-├── server/
+├── server/                   # Express API
 │   ├── src/
-│   │
-│   ├── ai/
-│   │   ├── prompts/
-│   │   └── services/
-│   │
-│   ├── common/
-│   ├── config/
-│   ├── middleware/
-│   │
-│   ├── modules/
-│   │   ├── auth/
-│   │   ├── user/
-│   │   ├── interview/
-│   │   ├── question/
-│   │   ├── answer/
-│   │   ├── evaluation/
-│   │   ├── report/
-│   │   └── dashboard/
-│   │
-│   └── server.ts
+│   │   ├── ai/
+│   │   │   ├── prompts/      # Gemini prompt builders
+│   │   │   └── services/     # gemini, evaluation, report, resume services
+│   │   ├── config/           # env, db, cors, logger
+│   │   ├── modules/          # auth, interview, question, answer, evaluation, report, dashboard, resume
+│   │   └── shared/           # middleware (auth, validate, rate-limit), utils, errors
+│   └── Dockerfile
 │
-└── README.md
+├── docker-compose.yml        # Local full-stack orchestration
+└── .gitignore
 ```
 
 ---
 
-# 🏛️ Backend Architecture
+## Getting Started
 
-The backend follows a modular architecture with clear separation of responsibilities.
+### Prerequisites
 
-```text
-Client Request
+- Node.js 20+
+- MongoDB Atlas account (or local MongoDB)
+- Google Gemini API key
 
-        │
+### Option A — Standard (npm)
 
-        ▼
+```bash
+# Backend
+cd server
+npm install
+cp .env.example .env   # fill in your values
+npm run dev
 
-Routes
-
-        │
-
-        ▼
-
-Validation Middleware
-
-        │
-
-        ▼
-
-Authentication Middleware
-
-        │
-
-        ▼
-
-Controller
-
-        │
-
-        ▼
-
-Service
-
-        │
-
-        ▼
-
-Repository
-
-        │
-
-        ▼
-
-MongoDB
-
-        │
-
-        ▼
-
-Response
+# Frontend (new terminal)
+cd client
+npm install
+npm run dev
 ```
 
-Each feature follows the same architecture:
+### Option B — Docker (recommended)
 
-```text
-module/
+```bash
+# Copy and fill in environment variables
+cp server/.env.example server/.env
 
-├── model
-├── repository
-├── service
-├── controller
-├── routes
-├── validation
-└── index
+# Build and start all services (Backend + Frontend + MongoDB)
+docker-compose up --build -d
+
+# Stop everything
+docker-compose down
+```
+
+### Environment Variables
+
+Create `server/.env`:
+
+```env
+PORT=4000
+NODE_ENV=development
+MONGODB_URI=your_mongodb_atlas_uri
+JWT_SECRET=your_jwt_secret_min_32_chars
+JWT_EXPIRES_IN=7d
+GEMINI_API_KEY=your_gemini_api_key
+CORS_ORIGIN=http://localhost:5173
+API_PREFIX=/api/v1
+```
+
+Create `client/.env`:
+
+```env
+VITE_API_URL=/api/v1
 ```
 
 ---
 
-# 🤖 AI Interview Flow
+## API Overview
 
-## Start Interview
-
-```text
-Candidate
-
-        │
-
-        ▼
-
-Create Interview
-
-        │
-
-        ▼
-
-Gemini Generates First Question
-
-        │
-
-        ▼
-
-AI Speaks Question (TTS)
-
-        │
-
-        ▼
-
-Candidate Responds (Voice)
 ```
-
----
-
-## Interview Loop
-
-```text
-Candidate Speaks
-
-        │
-
-        ▼
-
-Speech-to-Text
-
-        │
-
-        ▼
-
-LLM Understands Response
-
-        │
-
-        ▼
-
-Internal Evaluation
-
-        │
-
-        ▼
-
-Generate Follow-up Question
-
-        │
-
-        ▼
-
-Text-to-Speech
-
-        │
-
-        ▼
-
-Candidate Hears Next Question
-
-        │
-
-        ▼
-
-Repeat Until Interview Ends
-```
-
----
-
-## Interview Completion
-
-```text
-All Questions
-
-        +
-
-All Answers
-
-        +
-
-Internal Evaluations
-
-        │
-
-        ▼
-
-Gemini
-
-        │
-
-        ▼
-
-Generate Final Interview Report
-
-        │
-
-        ▼
-
-Store Report
-
-        │
-
-        ▼
-
-Display Report to Candidate
-```
-
----
-
-# 🗄️ Database Design
-
-Collections
-
-- Users
-- Interviews
-- Questions
-- Answers
-- Evaluations
-- Reports
-
-Relationships
-
-```text
-User
-│
-└── Interviews
-      │
-      ├── Questions
-      ├── Answers
-      └── Report
-             │
-             └── Evaluations
-```
-
----
-
-# 🔐 Authentication
-
-- JWT Authentication
-- HTTP-only Cookies
-- Password Hashing using bcrypt
-- Protected API Routes
-- Global Error Handling
-- Zod Request Validation
-
----
-
-# 🌐 API Overview
-
-## Authentication
-
-```http
 POST   /api/v1/auth/register
 POST   /api/v1/auth/login
 POST   /api/v1/auth/logout
 GET    /api/v1/auth/me
-```
 
----
-
-## Interviews
-
-```http
 POST   /api/v1/interviews
 GET    /api/v1/interviews
 GET    /api/v1/interviews/:id
 POST   /api/v1/interviews/:id/answer
 GET    /api/v1/interviews/:id/report
-```
+GET    /api/v1/interviews/:id/details
 
----
-
-## Dashboard
-
-```http
 GET    /api/v1/dashboard
+
+POST   /api/v1/resume/analyze
 ```
 
 ---
 
-# 🚀 Getting Started
+## Deployment
 
-## Clone Repository
-
-```bash
-git clone https://github.com/your-username/InterviewIQ.git
-
-cd InterviewIQ
-```
+- **Frontend:** Vercel — root directory set to `/client`. `vercel.json` rewrites `/api/*` to the backend.
+- **Backend:** Render — root directory set to `/server`. Environment variables configured in dashboard.
+- **Database:** MongoDB Atlas (shared across environments via `MONGODB_URI`).
 
 ---
 
-## Backend
+## Roadmap
 
-```bash
-cd server
-
-pnpm install
-
-pnpm dev
-```
-
----
-
-## Frontend
-
-```bash
-cd client
-
-pnpm install
-
-pnpm dev
-```
+- [x] AI question generation and evaluation (Gemini 2.5 Flash)
+- [x] Voice and text interview modes
+- [x] Comprehensive performance reports
+- [x] Resume analyzer
+- [x] Dashboard with performance history
+- [x] Docker setup
+- [x] Deployed on Vercel + Render
+- [ ] LinkedIn profile integration
+- [ ] Full voice mode (TTS output + real-time STT)
+- [ ] OAuth (Google/GitHub)
+- [ ] Domain-specific Mastery Series
 
 ---
 
-# 🔑 Environment Variables
+## License
 
-### Server
-
-```env
-PORT=
-
-NODE_ENV=
-
-MONGODB_URI=
-
-JWT_SECRET=
-
-JWT_EXPIRES_IN=
-
-GEMINI_API_KEY=
-```
-
----
-
-# 📌 Development Roadmap
-
-## Phase 1
-
-- [x] Backend Foundation
-- [x] Authentication
-- [x] MongoDB Integration
-
----
-
-## Phase 2
-
-- [x] AI Interview Engine
-- [x] AI Question Generation
-- [x] AI Answer Evaluation
-- [x] Final Interview Report
-
----
-
-## Phase 3
-
-- [ ] React Frontend
-- [ ] Authentication UI
-- [ ] Dashboard
-- [ ] Voice Interview Screen
-- [ ] Interview Report UI
-
----
-
-## Phase 4
-
-- [ ] Speech-to-Text Integration
-- [ ] Text-to-Speech Integration
-- [ ] Voice Streaming
-- [ ] Interview History Improvements
-
----
-
-## Phase 5
-
-- [ ] Resume-based Interviews
-- [ ] Personalized Learning Roadmaps
-- [ ] Adaptive Interviews
-- [ ] AI Analytics
-- [ ] Company-specific Interview Modes
-
----
-
-# 🤝 Contributing
-
-Contributions, suggestions, and issue reports are welcome.
-
-Feel free to fork the repository, create a feature branch, and submit a Pull Request.
-
----
-
-# 📄 License
-
-This project is licensed under the **MIT License**.
-
----
-
-# 👨‍💻 Author
-
-**Sujal**
-
-Built with ❤️ using **React, Express, MongoDB, TypeScript, and Google Gemini AI**.
+MIT © Sujal Wadhankar
