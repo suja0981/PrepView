@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://prepview-5ac3.onrender.com"
+      "destination": "https://prepview-5ac3.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
