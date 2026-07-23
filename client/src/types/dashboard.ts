@@ -13,4 +13,5 @@ export interface DashboardData {
   completedInterviews: number;
   averageScore: number;
   recentInterviews: RecentInterview[];
+  performanceHistory?: { date: string; score: number }[];
 }

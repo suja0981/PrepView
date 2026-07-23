@@ -6,7 +6,7 @@ export const createInterviewSchema = z.object({
   techStacks: z.string().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]),
   type: z.enum(["technical", "behavioral"]),
-  mode: z.enum(["voice", "text"]).default("voice"),
+  mode: z.enum(["voice", "text"]),
 });
 
 export type CreateInterviewSchema = z.infer<typeof createInterviewSchema>;
