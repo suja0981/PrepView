@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { env } from "../../config/env";
 
 const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.5-flash";
 
 /** Strip markdown code fences that Gemini sometimes wraps around JSON */
 function stripFences(text: string): string {

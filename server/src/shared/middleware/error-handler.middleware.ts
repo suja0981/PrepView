@@ -33,7 +33,9 @@ export function errorHandlerMiddleware(
     return;
   }
 
-  logger.error({ error }, "Unhandled application error");
+  const errMsg = error instanceof Error ? error.message : String(error);
+  const errStack = error instanceof Error ? error.stack : undefined;
+  logger.error({ err: { message: errMsg, stack: errStack } }, "Unhandled application error");
 
   response.status(500).json({
     success: false,

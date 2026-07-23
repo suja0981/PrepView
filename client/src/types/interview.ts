@@ -1,8 +1,10 @@
 export interface CreateInterviewRequest {
   role: string;
   company?: string;
+  techStacks?: string;
   difficulty: "easy" | "medium" | "hard";
   type: "technical" | "behavioral";
+  mode: "voice" | "text";
 }
 
 export interface Question {

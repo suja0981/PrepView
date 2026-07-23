@@ -53,7 +53,7 @@ export default function ScoreChart({ data }: ScoreChartProps) {
               }}
               itemStyle={{ color: "hsl(var(--primary))", fontWeight: 600 }}
               labelStyle={{ color: "hsl(var(--muted-foreground))", marginBottom: "4px" }}
-              formatter={(value: number) => [`${Math.round(value)}%`, "Score"]}
+              formatter={(value: any) => [`${Math.round(Number(value))}%`, "Score"]}
             />
             <Line
               type="monotone"

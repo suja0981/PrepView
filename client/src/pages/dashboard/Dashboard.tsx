@@ -28,7 +28,7 @@ export default function Dashboard() {
 
   if (isLoading) return <DashboardSkeleton />;
 
-  const stats = data?.data;
+  const stats = data;
   const pending = (stats?.totalInterviews ?? 0) - (stats?.completedInterviews ?? 0);
   const firstName = user?.name?.split(" ")[0] ?? "there";
 
