@@ -162,3 +162,33 @@ body {
     @apply font-sans;
   }
 }
+
+/* ─── Print styles (for PDF export from Report page) ─────────────────────── */
+@media print {
+  /* Hide navigation elements */
+  header,
+  aside,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12px;
+  }
+
+  /* Expand content to full width */
+  .mx-auto {
+    max-width: 100% !important;
+    padding: 0 1rem !important;
+  }
+
+  /* Remove shadows and make borders print-friendly */
+  * {
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

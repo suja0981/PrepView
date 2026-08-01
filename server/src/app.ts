@@ -14,6 +14,7 @@ import { authRouter } from "./modules/auth";
 import { interviewRouter } from "./modules/interview";
 import { dashboardRouter } from "./modules/dashboard";
 import { resumeRouter } from "./modules/resume/resume.routes";
+import { paymentRouter } from "./modules/payment/payment.routes";
 
 export function createApp() {
   const app = express();
@@ -45,6 +46,7 @@ export function createApp() {
   app.use("/api/v1/interviews", interviewRouter);
   app.use("/api/v1/dashboard", dashboardRouter);
   app.use("/api/v1/resume", resumeRouter);
+  app.use("/api/v1/payments", paymentRouter);
 
   app.use(env.API_PREFIX, apiRouter);
   app.use(notFoundMiddleware);

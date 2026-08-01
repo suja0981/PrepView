@@ -14,21 +14,26 @@ const interviewSchema = new Schema(
       required: true,
       trim: true,
     },
+
+    // Extended: technical | behavioral | dsa | system_design | mixed
     type: {
       type: String,
-      enum: ["technical", "behavioral"],
+      enum: ["technical", "behavioral", "dsa", "system_design", "mixed"],
       default: "technical",
     },
+
     mode: {
       type: String,
       enum: ["voice", "text"],
       default: "voice",
     },
+
     company: {
       type: String,
       trim: true,
       default: null,
     },
+
     techStacks: {
       type: String,
       trim: true,
@@ -50,6 +55,12 @@ const interviewSchema = new Schema(
     questionsAsked: {
       type: Number,
       default: 0,
+    },
+
+    // How many follow-up slots remain (weak answers spend one slot)
+    followUpsRemaining: {
+      type: Number,
+      default: 2,
     },
 
     startedAt: {

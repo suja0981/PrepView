@@ -6,10 +6,23 @@ import { useTimer } from "./useTimer";
 
 export type InterviewStatus =
   | "idle"
-  | "speaking"
-  | "listening"
-  | "submitting"
+  | "speaking"    // reserved: AI reading question via TTS
+  | "listening"   // microphone is active, capturing speech
+  | "feedback"    // showing per-answer evaluation before next question
+  | "submitting"  // API call in-flight
   | "completed";
+
+// Minimum words spoken before a voice answer can be submitted
+const MIN_SPOKEN_WORDS = 5;
+
+export interface VoiceEvaluation {
+  overallScore: number;
+  technicalAccuracy: number;
+  reasoning: number;
+  communication: number;
+  feedback: string;
+  weakTopics: string[];
+}
 
 export const useInterviewSession = (interviewId: string) => {
   const navigate = useNavigate();
@@ -19,9 +32,19 @@ export const useInterviewSession = (interviewId: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Question counter — tracked locally to avoid stale interview.questionsAsked
+  const [questionNumber, setQuestionNumber] = useState(1);
+
+  // Pending evaluation & next question — shown in the feedback panel
+  const [pendingEvaluation, setPendingEvaluation] = useState<VoiceEvaluation | null>(null);
+  const [pendingNextQuestion, setPendingNextQuestion] = useState<any>(null);
+  const [pendingIsFollowUp, setPendingIsFollowUp] = useState(false);
+
   const {
     isListening,
     transcript,
+    speechError,
+    speechErrorMessage,
     startListening,
     stopListening,
     resetTranscript,
@@ -35,6 +58,10 @@ export const useInterviewSession = (interviewId: string) => {
     reset: resetTimer,
   } = useTimer();
 
+  // Computed: is the transcript long enough to submit?
+  const spokenWordCount = transcript.trim() ? transcript.trim().split(/\s+/).length : 0;
+  const isAnswerReady = spokenWordCount >= MIN_SPOKEN_WORDS;
+
   // Load interview details on mount
   useEffect(() => {
     let active = true;
@@ -44,7 +71,6 @@ export const useInterviewSession = (interviewId: string) => {
         const res = await getInterview(interviewId);
         if (!active) return;
 
-        // API returns { success, data: { interview, currentQuestion } }
         setInterview(res.data.interview);
         setCurrentQuestion(res.data.currentQuestion);
 
@@ -63,31 +89,34 @@ export const useInterviewSession = (interviewId: string) => {
     };
 
     fetchSession();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [interviewId, navigate]);
 
   const startInterview = useCallback(() => {
     if (!currentQuestion) return;
-
     setStatus("listening");
     startTimer();
     startListening();
   }, [currentQuestion, startTimer, startListening]);
 
-  const handleNextQuestion = useCallback((nextQuestionObj: any) => {
-    setCurrentQuestion(nextQuestionObj);
+  // Called when user clicks "Next question" in the feedback panel
+  const handleContinueToNext = useCallback(() => {
+    if (!pendingNextQuestion) return;
+    setCurrentQuestion(pendingNextQuestion);
+    setQuestionNumber((n) => n + 1);
+    setPendingEvaluation(null);
+    setPendingNextQuestion(null);
+    setPendingIsFollowUp(false);
     resetTranscript();
     resetTimer();
-
     setStatus("listening");
     startTimer();
     startListening();
-  }, [resetTranscript, resetTimer, startTimer, startListening]);
+  }, [pendingNextQuestion, resetTranscript, resetTimer, startTimer, startListening]);
 
   const handleSubmit = useCallback(async () => {
     if (!currentQuestion || status !== "listening") return;
+    if (!isAnswerReady) return; // Minimum speech guard
 
     setStatus("submitting");
     stopTimer();
@@ -96,18 +125,21 @@ export const useInterviewSession = (interviewId: string) => {
     try {
       const res = await submitAnswer(interviewId, {
         questionId: currentQuestion._id,
-        answer: transcript || "(No answer spoken)",
+        answer: transcript,
         responseTime: seconds || 1,
       });
 
-      // API returns { success, data: { completed, nextQuestion/report } }
       const payload = res.data;
 
       if (payload.completed) {
         setStatus("completed");
         navigate(`/interview/${interviewId}/report`);
       } else {
-        handleNextQuestion(payload.nextQuestion);
+        // Show the feedback panel — don't jump directly to next question
+        setPendingEvaluation(payload.evaluation);
+        setPendingNextQuestion(payload.nextQuestion);
+        setPendingIsFollowUp(!!payload.isFollowUp);
+        setStatus("feedback");
       }
     } catch (err: any) {
       setError(err.response?.data?.message ?? "Failed to submit answer");
@@ -121,12 +153,12 @@ export const useInterviewSession = (interviewId: string) => {
     status,
     transcript,
     seconds,
+    isAnswerReady,
     stopTimer,
     stopListening,
     startTimer,
     startListening,
     navigate,
-    handleNextQuestion,
   ]);
 
   const cleanUp = useCallback(() => {
@@ -134,11 +166,8 @@ export const useInterviewSession = (interviewId: string) => {
     stopTimer();
   }, [stopListening, stopTimer]);
 
-  // Clean up speech and timers on unmount
   useEffect(() => {
-    return () => {
-      cleanUp();
-    };
+    return () => { cleanUp(); };
   }, [cleanUp]);
 
   return {
@@ -150,10 +179,18 @@ export const useInterviewSession = (interviewId: string) => {
     error,
     seconds,
     transcript,
+    spokenWordCount,
+    isAnswerReady,
     isListening,
     isSpeechSupported,
+    speechError,
+    speechErrorMessage,
+    questionNumber,
+    pendingEvaluation,
+    pendingIsFollowUp,
     startInterview,
     handleSubmit,
+    handleContinueToNext,
     cleanUp,
   };
 };

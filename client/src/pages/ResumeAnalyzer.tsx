@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import {
   Upload, FileText, Loader2, CheckCircle, AlertCircle,
   Sparkles, BarChart3, ArrowRight, X, RefreshCw,
+  MessageSquare, HelpCircle, Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -9,44 +10,88 @@ import { analyzeResume } from "@/api/resume.api";
 
 type AnalysisState = "idle" | "uploading" | "done";
 
+// Matches the actual API response from resume.service.ts
 interface AnalysisResult {
-  matchScore: number;
+  atsScore: number;         // 0-100 deterministic ATS score
+  matchedSkills: string[];  // skills found in both resume & JD
+  missingSkills: string[];  // required JD skills absent from resume
   summary: string;
-  strengths: string[];
-  gaps: string[];
   suggestions: string[];
   talkingPoints: string[];
+  possibleQuestions: string[];
 }
 
-
-
+// ── Circular ATS score ring ──────────────────────────────────────────────────
 function ScoreMeter({ score }: { score: number }) {
-  const color = score >= 75 ? "text-emerald-500" : score >= 50 ? "text-amber-500" : "text-red-500";
-  const ringColor = score >= 75 ? "stroke-emerald-500" : score >= 50 ? "stroke-amber-500" : "stroke-red-500";
-  const r = 36;
+  const isGood = score >= 75;
+  const isMid = score >= 50;
+  const color = isGood ? "text-emerald-500" : isMid ? "text-amber-500" : "text-red-500";
+  const ringColor = isGood ? "stroke-emerald-500" : isMid ? "stroke-amber-500" : "stroke-red-500";
+  const label = isGood ? "Strong match" : isMid ? "Partial match" : "Weak match";
+  const r = 44;
   const circumference = 2 * Math.PI * r;
   const offset = circumference - (score / 100) * circumference;
 
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="relative flex items-center justify-center">
-        <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
-          <circle cx="48" cy="48" r={r} fill="none" strokeWidth="6" className="stroke-border" />
+        <svg width="112" height="112" viewBox="0 0 112 112" className="-rotate-90">
+          {/* Background track */}
+          <circle cx="56" cy="56" r={r} fill="none" strokeWidth="7" className="stroke-border" />
+          {/* Progress arc */}
           <circle
-            cx="48" cy="48" r={r} fill="none" strokeWidth="6"
+            cx="56" cy="56" r={r} fill="none" strokeWidth="7"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            className={`${ringColor} transition-all duration-700`}
+            className={`${ringColor} transition-all duration-1000 ease-out`}
           />
         </svg>
-        <span className={`absolute text-2xl font-bold ${color}`}>{score}</span>
+        {/* Score number in the center */}
+        <div className="absolute flex flex-col items-center">
+          <span className={`text-3xl font-bold tabular-nums ${color}`}>{score}</span>
+          <span className="text-[10px] text-muted-foreground font-medium">/ 100</span>
+        </div>
       </div>
-      <p className="text-[12px] text-muted-foreground">Match score</p>
+      <div className="text-center">
+        <p className={`text-[12px] font-semibold ${color}`}>{label}</p>
+        <p className="text-[11px] text-muted-foreground">ATS Score</p>
+      </div>
     </div>
   );
 }
 
+// ── Skill chip ───────────────────────────────────────────────────────────────
+function SkillChip({ label, variant }: { label: string; variant: "matched" | "missing" }) {
+  const styles =
+    variant === "matched"
+      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+      : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${styles}`}>
+      {label}
+    </span>
+  );
+}
+
+// ── Section card ─────────────────────────────────────────────────────────────
+function SectionCard({ title, icon, children }: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground">{icon}</span>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
 export default function ResumeAnalyzer() {
   const [state, setState] = useState<AnalysisState>("idle");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -97,68 +142,81 @@ export default function ResumeAnalyzer() {
     setResult(null);
   };
 
-  // ── Results view ──
+  // ── Results view ─────────────────────────────────────────────────────────
   if (state === "done" && result) {
     return (
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-10 sm:py-14 space-y-8">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-10 sm:py-14 space-y-6">
+
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Analysis complete</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+              Analysis complete
+            </p>
             <h1 className="text-2xl font-semibold tracking-tight">Resume vs JD Report</h1>
             <p className="mt-1 text-sm text-muted-foreground">{resumeFile?.name}</p>
           </div>
-          <button onClick={reset} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors shrink-0">
+          <button
+            onClick={reset}
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          >
             <RefreshCw size={13} /> New analysis
           </button>
         </div>
 
         {/* Score + summary */}
         <div className="rounded-xl border border-border bg-card p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-          <ScoreMeter score={result.matchScore} />
+          <ScoreMeter score={result.atsScore} />
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground mb-1.5">AI Summary</p>
             <p className="text-[13px] text-muted-foreground leading-relaxed">{result.summary}</p>
           </div>
         </div>
 
-        {/* Strengths & Gaps */}
+        {/* Skill chips — matched & missing */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5 space-y-3">
             <div className="flex items-center gap-2">
-              <CheckCircle size={15} className="text-emerald-500" />
-              <p className="text-sm font-semibold text-foreground">What matches</p>
+              <CheckCircle size={14} className="text-emerald-500" />
+              <p className="text-sm font-semibold text-foreground">
+                Matched skills ({result.matchedSkills.length})
+              </p>
             </div>
-            <ul className="space-y-2">
-              {result.strengths.map((s) => (
-                <li key={s} className="text-[13px] text-muted-foreground pl-4 relative before:absolute before:left-0 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-emerald-500">
-                  {s}
-                </li>
-              ))}
-            </ul>
+            {result.matchedSkills.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {result.matchedSkills.map((s) => (
+                  <SkillChip key={s} label={s} variant="matched" />
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px] text-muted-foreground italic">None detected.</p>
+            )}
           </div>
 
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 space-y-3">
             <div className="flex items-center gap-2">
-              <AlertCircle size={15} className="text-amber-500" />
-              <p className="text-sm font-semibold text-foreground">Gaps identified</p>
+              <AlertCircle size={14} className="text-amber-500" />
+              <p className="text-sm font-semibold text-foreground">
+                Missing skills ({result.missingSkills.length})
+              </p>
             </div>
-            <ul className="space-y-2">
-              {result.gaps.map((g) => (
-                <li key={g} className="text-[13px] text-muted-foreground pl-4 relative before:absolute before:left-0 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-amber-500">
-                  {g}
-                </li>
-              ))}
-            </ul>
+            {result.missingSkills.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {result.missingSkills.map((s) => (
+                  <SkillChip key={s} label={s} variant="missing" />
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px] text-emerald-500 font-medium">✓ No skill gaps found</p>
+            )}
           </div>
         </div>
 
-        {/* Suggestions */}
-        <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-          <p className="text-sm font-semibold text-foreground">Suggested improvements</p>
+        {/* Suggested improvements */}
+        <SectionCard title="Suggested improvements" icon={<Lightbulb size={15} />}>
           <div className="space-y-2">
             {result.suggestions.map((s, i) => (
-              <div key={s} className="flex gap-3 text-[13px]">
+              <div key={i} className="flex gap-3 text-[13px]">
                 <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full border border-border text-[11px] font-semibold text-muted-foreground mt-0.5">
                   {i + 1}
                 </span>
@@ -166,12 +224,44 @@ export default function ResumeAnalyzer() {
               </div>
             ))}
           </div>
-        </div>
+        </SectionCard>
+
+        {/* Talking points */}
+        {result.talkingPoints.length > 0 && (
+          <SectionCard title="Talking points for the interview" icon={<MessageSquare size={15} />}>
+            <ul className="space-y-2">
+              {result.talkingPoints.map((t, i) => (
+                <li key={i} className="text-[13px] text-muted-foreground pl-4 relative before:absolute before:left-0 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-primary">
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        )}
+
+        {/* Possible interview questions */}
+        {result.possibleQuestions.length > 0 && (
+          <SectionCard title="Likely interview questions" icon={<HelpCircle size={15} />}>
+            <p className="text-[12px] text-muted-foreground -mt-1">
+              Based on the JD and your profile — practice these before the interview.
+            </p>
+            <ol className="space-y-2.5">
+              {result.possibleQuestions.map((q, i) => (
+                <li key={i} className="flex gap-3 text-[13px]">
+                  <span className="shrink-0 w-5 text-right text-[11px] font-semibold text-muted-foreground/60 mt-0.5">
+                    {i + 1}.
+                  </span>
+                  <p className="text-muted-foreground leading-relaxed">{q}</p>
+                </li>
+              ))}
+            </ol>
+          </SectionCard>
+        )}
 
         {/* CTA */}
         <div className="rounded-xl border border-border bg-secondary/30 px-5 py-4 flex items-center justify-between gap-4">
           <p className="text-[13px] text-muted-foreground">
-            Ready to test your answers for this role?
+            Ready to practice answers for this role?
           </p>
           <a
             href="/interview/text/create"
@@ -184,7 +274,7 @@ export default function ResumeAnalyzer() {
     );
   }
 
-  // ── Upload / input view ──
+  // ── Upload / input view ──────────────────────────────────────────────────
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-10 sm:py-14 space-y-10">
 
@@ -192,11 +282,12 @@ export default function ResumeAnalyzer() {
       <div>
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-[11px] font-medium text-muted-foreground mb-4">
           <Sparkles size={11} className="text-primary" />
-          AI-powered gap analysis
+          AI-powered ATS analysis
         </div>
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Resume Analyzer</h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg">
-          Paste a job description and upload your resume. The AI compares them and tells you exactly what's missing, what's strong, and what to fix.
+          Paste a job description and upload your resume. The AI compares them and shows your ATS
+          score, matched/missing skills, and likely interview questions.
         </p>
       </div>
 
