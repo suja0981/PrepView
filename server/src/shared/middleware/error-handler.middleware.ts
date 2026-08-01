@@ -25,6 +25,11 @@ export function errorHandlerMiddleware(
   if (error instanceof AppError) {
     response.status(error.statusCode).json({
       success: false,
+      // Surface upgradeRequired at the top level so the frontend interceptor
+      // can detect it without digging into error.details
+      ...(error.statusCode === 403 && error.details === true
+        ? { upgradeRequired: true }
+        : {}),
       error: {
         message: error.message,
         details: error.details,

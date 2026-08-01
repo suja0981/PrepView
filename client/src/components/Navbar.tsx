@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import {
   LogOut, Sun, Moon, Menu,
-  Plus, ChevronDown, Settings,
+  Plus, ChevronDown, Settings, Crown,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useLogout } from "@/hooks/useAuth";
@@ -118,6 +118,26 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
                 {/* Menu items */}
                 <div className="p-1.5">
+                  {/* Plan / Upgrade link */}
+                  {user?.plan === "premium" ? (
+                    <Link
+                      to="/pricing"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-amber-600 dark:text-amber-400 transition-colors hover:bg-amber-500/10"
+                    >
+                      <Crown size={13} />
+                      Manage Plan
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/pricing"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-primary transition-colors hover:bg-primary/10 font-medium"
+                    >
+                      <Crown size={13} />
+                      Upgrade to Premium
+                    </Link>
+                  )}
                   <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                     <Settings size={13} />
                     Settings

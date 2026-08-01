@@ -21,20 +21,20 @@ const features = [
   },
   {
     id: "voice",
-    href: "#",
-    available: false,
+    href: "/interview/voice/create",
+    available: true,
     icon: Mic,
     label: "Voice Interview",
-    tag: "Coming soon",
-    tagStyle: "bg-secondary text-muted-foreground border-border",
-    desc: "Speak your answers aloud just like a real interview. The AI listens, evaluates tone, and gives voice-specific feedback.",
+    tag: "Available",
+    tagStyle: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    desc: "Speak your answers aloud just like a real interview. AI listens, evaluates each answer, and gives detailed feedback.",
     bullets: [
-      "Hands-free voice responses",
-      "Filler word & pace detection",
-      "Realistic real-time conversation",
+      "Real-time speech-to-text transcription",
+      "AI feedback panel after every answer",
+      "Targeted follow-up on weak responses",
     ],
-    cta: "Coming soon",
-    ctaStyle: "bg-secondary text-muted-foreground cursor-not-allowed",
+    cta: "Start voice interview",
+    ctaStyle: "bg-primary text-primary-foreground hover:bg-primary/90",
   },
 ];
 
@@ -56,7 +56,7 @@ export default function PracticePage() {
       <div>
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-[11px] font-medium text-muted-foreground mb-4">
           <Sparkles size={11} className="text-primary" />
-          Powered by Gemini AI
+          Powered by AI
         </div>
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Practice hub</h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-md">

@@ -2,7 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Sparkles, Code2, Users, Binary, Server, Shuffle, Crown, Lock } from "lucide-react";
+import { Loader2, ArrowLeft, Mic, Code2, Users, Binary, Server, Shuffle, Volume2, Crown, ArrowRight } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,6 @@ const difficulties = [
   { value: "hard", label: "Hard", desc: "FAANG-level" },
 ] as const;
 
-// All 5 interview types with icons
 const types = [
   { value: "technical", label: "Technical", desc: "Code & concepts", icon: Code2 },
   { value: "behavioral", label: "Behavioral", desc: "STAR format & soft skills", icon: Users },
@@ -25,9 +24,11 @@ const types = [
   { value: "mixed", label: "Mixed", desc: "All domains combined", icon: Shuffle },
 ] as const;
 
-export default function CreateTextInterview() {
+export default function CreateVoiceInterview() {
   const navigate = useNavigate();
   const mutation = useCreateInterview();
+  const { user } = useAuthContext();
+  const isPremium = user?.plan === "premium";
 
   const form = useForm<CreateInterviewSchema>({
     resolver: zodResolver(createInterviewSchema),
@@ -37,14 +38,14 @@ export default function CreateTextInterview() {
       techStacks: "",
       difficulty: "medium",
       type: "technical",
-      mode: "text",
+      mode: "voice",
     },
   });
 
   async function onSubmit(values: CreateInterviewSchema) {
     try {
-      const res = await mutation.mutateAsync({ ...values, mode: "text" });
-      toast.success("Interview session created");
+      const res = await mutation.mutateAsync({ ...values, mode: "voice" });
+      toast.success("Voice interview session created");
       navigate(`/interview/${res.data.interview._id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.error?.message ?? "Failed to create interview");
@@ -53,12 +54,38 @@ export default function CreateTextInterview() {
 
   const selectedDifficulty = form.watch("difficulty");
   const selectedType = form.watch("type");
-  const { user } = useAuthContext();
-  const isPremium = user?.plan === "premium";
 
-  // Types and difficulties locked behind Premium for free users
-  const PREMIUM_TYPES = ["dsa", "system_design"];
-  const PREMIUM_DIFFICULTIES = ["hard"];
+  // ── Premium gate — shown to free users instead of the form ─────────────────
+  if (!isPremium) {
+    return (
+      <div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-6">
+        <div className="mx-auto max-w-sm text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/20">
+              <Crown size={28} className="text-amber-500" />
+            </div>
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">Voice Interview is Premium</h1>
+            <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
+              Voice interviews, DSA, System Design, and unlimited sessions are available on the Premium plan for $9/month.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Button asChild className="gap-1.5">
+              <Link to="/pricing">
+                <Crown size={13} /> View Premium plans <ArrowRight size={13} />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/interview/create"><ArrowLeft size={13} className="mr-1" /> Back to hub</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-10 sm:py-14">
@@ -73,13 +100,22 @@ export default function CreateTextInterview() {
       {/* Header */}
       <div className="mb-8">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-[11px] font-medium text-muted-foreground mb-3">
-          <Sparkles size={11} className="text-primary" />
-          Text Interview
+          <Mic size={11} className="text-primary" />
+          Voice Interview
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">Configure your session</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          The AI generates adaptive questions based on your selections. Weak answers get targeted follow-ups.
+          Speak your answers aloud just like a real interview. AI listens, evaluates, and gives detailed feedback.
         </p>
+      </div>
+
+      {/* Mic requirement notice */}
+      <div className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 px-4 py-3.5 mb-6">
+        <Volume2 size={15} className="text-primary shrink-0 mt-0.5" />
+        <div className="text-[13px] text-muted-foreground leading-relaxed">
+          <span className="text-foreground font-medium">Microphone required.</span>{" "}
+          You will be prompted to allow microphone access before the session starts. Use Chrome or Edge for best results.
+        </div>
       </div>
 
       <Form {...form}>
@@ -138,7 +174,7 @@ export default function CreateTextInterview() {
             )} />
           </div>
 
-          {/* Interview Type — 5 options in a 2+3 grid */}
+          {/* Interview Type */}
           <div className="rounded-xl border border-border bg-card p-6 space-y-4">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Interview Type</p>
@@ -147,41 +183,24 @@ export default function CreateTextInterview() {
             <FormField control={form.control} name="type" render={({ field }) => (
               <FormItem>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {types.map(({ value, label, desc, icon: Icon }) => {
-                    const isLocked = !isPremium && PREMIUM_TYPES.includes(value);
-                    return isLocked ? (
-                      // Locked tile — shows Premium badge, links to /pricing
-                      <Link
-                        key={value}
-                        to="/pricing"
-                        className="flex flex-col items-start gap-1.5 rounded-lg border border-border/50 px-4 py-3 text-left opacity-60 hover:opacity-80 transition-opacity relative"
-                      >
-                        <Icon size={15} className="text-muted-foreground/50" />
-                        <span className="text-[13px] font-semibold leading-tight text-muted-foreground">{label}</span>
-                        <span className="text-[11px] text-muted-foreground/60 leading-tight">{desc}</span>
-                        <span className="absolute top-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-600 dark:text-amber-400">
-                          <Crown size={8} /> PRO
-                        </span>
-                      </Link>
-                    ) : (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => field.onChange(value)}
-                        className={`flex flex-col items-start gap-1.5 rounded-lg border px-4 py-3 text-left transition-all ${
-                          selectedType === value
-                            ? "border-primary bg-primary/8 ring-1 ring-primary/20"
-                            : "border-border hover:border-border/60 hover:bg-secondary/50"
-                        }`}
-                      >
-                        <Icon size={15} className={selectedType === value ? "text-primary" : "text-muted-foreground"} />
-                        <span className={`text-[13px] font-semibold leading-tight ${selectedType === value ? "text-foreground" : "text-muted-foreground"}`}>
-                          {label}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground leading-tight">{desc}</span>
-                      </button>
-                    );
-                  })}
+                  {types.map(({ value, label, desc, icon: Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => field.onChange(value)}
+                      className={`flex flex-col items-start gap-1.5 rounded-lg border px-4 py-3 text-left transition-all ${
+                        selectedType === value
+                          ? "border-primary bg-primary/8 ring-1 ring-primary/20"
+                          : "border-border hover:border-border/60 hover:bg-secondary/50"
+                      }`}
+                    >
+                      <Icon size={15} className={selectedType === value ? "text-primary" : "text-muted-foreground"} />
+                      <span className={`text-[13px] font-semibold leading-tight ${selectedType === value ? "text-foreground" : "text-muted-foreground"}`}>
+                        {label}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground leading-tight">{desc}</span>
+                    </button>
+                  ))}
                 </div>
                 <FormMessage />
               </FormItem>
@@ -194,40 +213,23 @@ export default function CreateTextInterview() {
             <FormField control={form.control} name="difficulty" render={({ field }) => (
               <FormItem>
                 <div className="grid grid-cols-3 gap-3">
-                  {difficulties.map(({ value, label, desc }) => {
-                    const isLocked = !isPremium && PREMIUM_DIFFICULTIES.includes(value);
-                    return isLocked ? (
-                      <Link
-                        key={value}
-                        to="/pricing"
-                        className="flex flex-col items-start gap-0.5 rounded-lg border border-border/50 px-4 py-3 text-left opacity-60 hover:opacity-80 transition-opacity relative"
-                      >
-                        <span className="text-[13px] font-semibold text-muted-foreground flex items-center gap-1">
-                          {label} <Lock size={10} className="text-amber-500" />
-                        </span>
-                        <span className="text-[11px] text-muted-foreground/60">{desc}</span>
-                        <span className="absolute top-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-600 dark:text-amber-400">
-                          <Crown size={8} /> PRO
-                        </span>
-                      </Link>
-                    ) : (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => field.onChange(value)}
-                        className={`flex flex-col items-start gap-0.5 rounded-lg border px-4 py-3 text-left transition-all ${
-                          selectedDifficulty === value
-                            ? "border-primary bg-primary/8 ring-1 ring-primary/20"
-                            : "border-border hover:border-border/60 hover:bg-secondary/50"
-                        }`}
-                      >
-                        <span className={`text-[13px] font-semibold ${selectedDifficulty === value ? "text-foreground" : "text-muted-foreground"}`}>
-                          {label}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground">{desc}</span>
-                      </button>
-                    );
-                  })}
+                  {difficulties.map(({ value, label, desc }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => field.onChange(value)}
+                      className={`flex flex-col items-start gap-0.5 rounded-lg border px-4 py-3 text-left transition-all ${
+                        selectedDifficulty === value
+                          ? "border-primary bg-primary/8 ring-1 ring-primary/20"
+                          : "border-border hover:border-border/60 hover:bg-secondary/50"
+                      }`}
+                    >
+                      <span className={`text-[13px] font-semibold ${selectedDifficulty === value ? "text-foreground" : "text-muted-foreground"}`}>
+                        {label}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">{desc}</span>
+                    </button>
+                  ))}
                 </div>
                 <FormMessage />
               </FormItem>
@@ -240,7 +242,7 @@ export default function CreateTextInterview() {
               <span className="text-foreground font-medium capitalize">
                 {types.find(t => t.value === selectedType)?.label} · {selectedDifficulty}
               </span>
-              {" "}· Text format · ~10 questions
+              {" "}· Voice format · ~10 questions
             </div>
             <Button type="submit" disabled={mutation.isPending} className="shrink-0 h-9 px-5 text-[13px] font-medium">
               {mutation.isPending
