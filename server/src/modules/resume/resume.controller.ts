@@ -61,17 +61,9 @@ export async function analyzeResumeHandler(
           );
         }
 
-        // Log this analysis
-        await PaymentLog.create({
-          userId,
-          eventId: `resume_${userId}_${Date.now()}`,
-          type: "resume_analysis",
-          status: "success",
-        });
       }
     }
     // ── End limit check ────────────────────────────────────────────────────
-
 
     let resumeText: string;
 
@@ -89,6 +81,20 @@ export async function analyzeResumeHandler(
     }
 
     const result = await analyzeResume({ resumeText, jobDescription });
+
+    // Log successful analysis for free tier daily limit tracking
+    if (userId) {
+      const dbUser = await User.findById(userId).select("plan");
+      if (dbUser?.plan !== "premium") {
+        await PaymentLog.create({
+          userId,
+          eventId: `resume_${userId}_${Date.now()}`,
+          type: "resume_analysis",
+          status: "success",
+        });
+      }
+    }
+
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);

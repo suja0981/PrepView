@@ -20,9 +20,18 @@ export interface ResumeAnalysisResult {
 
 export async function analyzeResume(data: ResumeAnalysisInput): Promise<ResumeAnalysisResult> {
   // 1. Pull structured facts out of the resume + JD.
-  const extraction: ResumeExtraction = await callGemini(
+  const rawExtraction = await callGemini(
     buildExtractionPrompt(data.resumeText, data.jobDescription),
   );
+
+  const extraction: ResumeExtraction = {
+    candidateSkills: Array.isArray(rawExtraction?.candidateSkills) ? rawExtraction.candidateSkills : [],
+    jdRequiredSkills: Array.isArray(rawExtraction?.jdRequiredSkills) ? rawExtraction.jdRequiredSkills : [],
+    jdPreferredSkills: Array.isArray(rawExtraction?.jdPreferredSkills) ? rawExtraction.jdPreferredSkills : [],
+    inferredRole: rawExtraction?.inferredRole || "Software Engineer",
+    seniorityLevel: rawExtraction?.seniorityLevel || "mid",
+    yearsOfExperience: typeof rawExtraction?.yearsOfExperience === "number" ? rawExtraction.yearsOfExperience : null,
+  };
 
   // 2. Score deterministically - plain code, not an AI guess.
   const { score, matchedSkills, missingSkills } = calculateAtsScore(extraction);
@@ -33,12 +42,12 @@ export async function analyzeResume(data: ResumeAnalysisInput): Promise<ResumeAn
   );
 
   return {
-    atsScore: score,
-    matchedSkills,
-    missingSkills,
-    summary: feedback.summary,
-    suggestions: feedback.suggestions,
-    talkingPoints: feedback.talkingPoints,
-    possibleQuestions: feedback.possibleQuestions,
+    atsScore: typeof score === "number" ? score : 50,
+    matchedSkills: Array.isArray(matchedSkills) ? matchedSkills : [],
+    missingSkills: Array.isArray(missingSkills) ? missingSkills : [],
+    summary: feedback?.summary || "Resume analyzed against job description requirements.",
+    suggestions: Array.isArray(feedback?.suggestions) ? feedback.suggestions : [],
+    talkingPoints: Array.isArray(feedback?.talkingPoints) ? feedback.talkingPoints : [],
+    possibleQuestions: Array.isArray(feedback?.possibleQuestions) ? feedback.possibleQuestions : [],
   };
 }
