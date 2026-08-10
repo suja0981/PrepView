@@ -94,3 +94,26 @@ export const getInterviewDetails = asyncHandler(async (req, res) => {
     data: interview,
   });
 });
+
+export const transcribeAudio = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new AppError("No audio file provided", 400);
+  }
+
+  const { transcribeAudioFile } = await import("../../ai/services/whisper.service");
+  const fs = await import("fs");
+
+  try {
+    const transcript = await transcribeAudioFile(req.file.path);
+    fs.unlink(req.file.path, () => {});
+
+    res.status(200).json({
+      success: true,
+      data: { transcript },
+    });
+  } catch (err) {
+    if (req.file) fs.unlink(req.file.path, () => {});
+    throw err;
+  }
+});
+

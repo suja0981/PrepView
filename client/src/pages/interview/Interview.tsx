@@ -4,10 +4,12 @@ import {
   Mic, Loader2, ArrowLeft, Check, ArrowRight,
   CheckCircle2, AlertCircle, ChevronRight, Zap, AlertTriangle, Volume2,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useInterviewSession } from "@/hooks/useInterviewSession";
 import TextInterview from "./TextInterview";
 import type { VoiceEvaluation } from "@/hooks/useInterviewSession";
+import { calculateSpeechMetrics } from "@/utils/speechMetrics";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -61,11 +63,11 @@ function MicPulse({ isListening }: { isListening: boolean }) {
 // ── Per-score mini badge ──────────────────────────────────────────────────────
 function ScoreBadge({ label, value }: { label: string; value: number }) {
   const pct = Math.round(value * 10);
-  const color = pct >= 70 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-red-500";
+  const color = pct >= 70 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-red-400";
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className={`text-base font-bold tabular-nums ${color}`}>{pct}%</span>
-      <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+      <span className={`text-lg font-bold tabular-nums font-mono ${color}`}>{pct}%</span>
+      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</span>
     </div>
   );
 }
@@ -76,18 +78,25 @@ function VoiceFeedbackPanel({
   questionNumber,
   isFollowUp,
   onContinue,
+  metrics,
 }: {
   evaluation: VoiceEvaluation;
   questionNumber: number;
   isFollowUp: boolean;
   onContinue: () => void;
+  metrics?: any;
 }) {
   const overallPct = Math.round(evaluation.overallScore * 10);
   const isStrong = overallPct >= 70;
   const isMid = overallPct >= 50;
 
   return (
-    <div className="mx-auto max-w-xl px-4 sm:px-6 py-8 sm:py-10 space-y-5">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+      className="mx-auto max-w-xl px-4 sm:px-6 py-8 sm:py-10 space-y-5"
+    >
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
           Answer {questionNumber} Evaluated
@@ -108,6 +117,27 @@ function VoiceFeedbackPanel({
         <ScoreBadge label="Communication" value={evaluation.communication} />
       </div>
 
+      {/* Delivery Metrics Breakdown */}
+      {metrics && metrics.wpm > 0 && (
+        <div className="rounded-xl border border-border/80 bg-card p-4 flex items-center justify-between text-[12.5px]">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground font-medium">Speech Pace:</span>
+            <span className="font-mono font-semibold text-foreground">{metrics.wpm} WPM</span>
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+              metrics.wpmStatus === "optimal"
+                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+            }`}>
+              {metrics.wpmStatus}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <span>Fillers:</span>
+            <span className="font-mono font-semibold text-foreground">{metrics.fillerCount}</span>
+          </div>
+        </div>
+      )}
+
       {/* AI feedback */}
       <div className="rounded-xl border border-border bg-card p-5 space-y-2">
         <div className="flex items-center gap-2">
@@ -122,7 +152,7 @@ function VoiceFeedbackPanel({
 
       {/* Follow-up warning */}
       {isFollowUp && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/8 px-4 py-2.5">
+        <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/8 px-4 py-2.5">
           <Zap size={13} className="text-amber-500 shrink-0" />
           <p className="text-[12px] text-amber-600 dark:text-amber-400">
             The next question probes the same topic more deeply.
@@ -133,7 +163,7 @@ function VoiceFeedbackPanel({
       <Button onClick={onContinue} className="w-full h-9 text-[13px] font-medium gap-1.5">
         Next question <ChevronRight size={13} />
       </Button>
-    </div>
+    </motion.div>
   );
 }
 
@@ -165,6 +195,7 @@ export default function Interview() {
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null);
   const [isCheckingPermission, setIsCheckingPermission] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [lastMetrics, setLastMetrics] = useState<any>(null);
 
   // Read question aloud when TTS is enabled and a new question appears
   useEffect(() => {
@@ -229,6 +260,7 @@ export default function Interview() {
         questionNumber={questionNumber}
         isFollowUp={pendingIsFollowUp}
         onContinue={handleContinueToNext}
+        metrics={lastMetrics}
       />
     );
   }
@@ -241,7 +273,7 @@ export default function Interview() {
           <ArrowLeft size={13} /> Back
         </Link>
 
-        <div className="rounded-lg border border-border bg-card p-6 space-y-5">
+        <div className="rounded-xl border border-border bg-card p-6 space-y-5">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground capitalize">{interview.difficulty}</span>
@@ -272,7 +304,7 @@ export default function Interview() {
         </div>
 
         {/* Mic check */}
-        <div className="rounded-lg border border-border bg-card p-6 space-y-4">
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
           <div>
             <p className="text-sm font-medium text-foreground">Microphone</p>
             <p className="mt-0.5 text-[13px] text-muted-foreground">Enable your microphone to start.</p>
@@ -345,7 +377,7 @@ export default function Interview() {
       </div>
 
       {/* Question card */}
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="flex items-center justify-between border-b border-border px-5 py-2.5">
           <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
             Question {questionNumber}
@@ -368,31 +400,55 @@ export default function Interview() {
       </div>
 
       {/* Live transcript */}
-      {status === "listening" && (
-        <div className="rounded-lg border border-border bg-card p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Transcript</p>
-            {/* Word count */}
-            <span className={`text-[11px] font-medium ${isAnswerReady ? "text-emerald-500" : "text-muted-foreground"}`}>
-              {spokenWordCount} words {isAnswerReady ? "✓" : `(min 5)`}
-            </span>
-          </div>
+      {status === "listening" && (() => {
+        const metrics = calculateSpeechMetrics(transcript, seconds);
+        return (
+          <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Transcript</p>
+              
+              <div className="flex items-center gap-2">
+                {/* Live WPM badge */}
+                {metrics.wpm > 0 && (
+                  <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border ${
+                    metrics.wpmStatus === "optimal"
+                      ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                      : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                  }`}>
+                    {metrics.wpm} WPM ({metrics.wpmStatus})
+                  </span>
+                )}
 
-          {/* Progress bar */}
-          <div className="h-1 w-full rounded-full bg-secondary overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${isAnswerReady ? "bg-emerald-500" : "bg-primary/50"}`}
-              style={{ width: `${Math.min((spokenWordCount / 10) * 100, 100)}%` }}
-            />
-          </div>
+                {/* Live Filler badge */}
+                {metrics.fillerCount > 0 && (
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    {metrics.fillerCount} filler{metrics.fillerCount > 1 ? "s" : ""}
+                  </span>
+                )}
 
-          {transcript ? (
-            <p className="text-sm text-muted-foreground leading-relaxed">{transcript}</p>
-          ) : (
-            <p className="text-[13px] text-muted-foreground/50 italic">Waiting for speech...</p>
-          )}
-        </div>
-      )}
+                {/* Word count */}
+                <span className={`text-[11px] font-medium ${isAnswerReady ? "text-emerald-500" : "text-muted-foreground"}`}>
+                  {spokenWordCount} words {isAnswerReady ? "✓" : `(min 5)`}
+                </span>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="h-1 w-full rounded-full bg-secondary overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${isAnswerReady ? "bg-emerald-500" : "bg-primary/50"}`}
+                style={{ width: `${Math.min((spokenWordCount / 10) * 100, 100)}%` }}
+              />
+            </div>
+
+            {transcript ? (
+              <p className="text-sm text-muted-foreground leading-relaxed">{transcript}</p>
+            ) : (
+              <p className="text-[13px] text-muted-foreground/50 italic">Waiting for speech...</p>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Speech error message */}
       {speechErrorMessage && (
@@ -405,7 +461,11 @@ export default function Interview() {
       {/* Submit */}
       {status === "listening" && (
         <Button
-          onClick={handleSubmit}
+          onClick={() => {
+            const m = calculateSpeechMetrics(transcript, seconds);
+            setLastMetrics(m);
+            handleSubmit();
+          }}
           disabled={!isAnswerReady}
           className="w-full h-9 text-[13px] font-medium gap-1.5"
         >
