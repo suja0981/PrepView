@@ -28,6 +28,13 @@ export function createApp() {
   );
   app.use(helmet());
   app.use(cors(corsOptions));
+
+  // Stripe Webhook MUST receive raw Buffer BEFORE express.json() parses the request
+  app.use(
+    "/api/v1/payments/webhook",
+    express.raw({ type: "application/json" }),
+  );
+
   app.use(express.json({ limit: "5mb" }));
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());

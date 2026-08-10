@@ -8,16 +8,22 @@ import { Button } from "@/components/ui/button";
  * The plan may not be updated yet (webhook is async), so we show a
  * friendly "activating" message for a few seconds before showing the CTA.
  */
+import { useAuthContext } from "@/context/AuthContext";
+
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [isActivating, setIsActivating] = useState(true);
+  const { refetchUser } = useAuthContext();
 
   useEffect(() => {
-    // Give the Stripe webhook ~3s to fire and update the user plan
-    const timer = setTimeout(() => setIsActivating(false), 3000);
+    // Give the Stripe webhook ~3s to fire and update the user plan in DB, then refetch
+    const timer = setTimeout(() => {
+      setIsActivating(false);
+      refetchUser();
+    }, 3000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [refetchUser]);
 
   return (
     <div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-6">

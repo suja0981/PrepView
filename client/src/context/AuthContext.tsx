@@ -9,12 +9,13 @@ type AuthContextType = {
   user: any;
   isAuthenticated: boolean;
   isLoading: boolean;
+  refetchUser: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { data, isLoading } = useCurrentUser();
+  const { data, isLoading, refetch } = useCurrentUser();
 
   return (
     <AuthContext.Provider
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: data?.data ?? null,
         isAuthenticated: !!data?.data,
         isLoading,
+        refetchUser: refetch,
       }}
     >
       {children}

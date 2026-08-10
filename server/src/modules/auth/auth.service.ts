@@ -57,6 +57,18 @@ class AuthService {
       throw new AppError("User not found.", 404);
     }
 
+    // Auto-downgrade if subscription period has expired
+    if (
+      user.plan === "premium" &&
+      user.planExpiresAt &&
+      new Date(user.planExpiresAt).getTime() < Date.now()
+    ) {
+      user.plan = "free";
+      user.stripeSubscriptionId = null;
+      user.planExpiresAt = null;
+      await user.save();
+    }
+
     return user;
   }
 }
