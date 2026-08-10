@@ -9,10 +9,13 @@ const envSchema = z.object({
     .default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
   API_PREFIX: z.string().min(1).default("/api/v1"),
-  MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
+  MONGODB_URI: z
+    .string()
+    .min(1, "MONGODB_URI is required")
+    .default("mongodb://127.0.0.1:27017/prepview_test"),
   CORS_ORIGIN: z.string().min(1).default("http://localhost:5173"),
-  JWT_SECRET: z.string().min(8),
-  JWT_EXPIRES_IN: z.string(),
+  JWT_SECRET: z.string().min(8).default("super-secret-jwt-test-key-12345"),
+  JWT_EXPIRES_IN: z.string().default("7d"),
   GEMINI_API_KEY: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
   // Razorpay — payment gateway configuration
