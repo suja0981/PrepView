@@ -46,22 +46,75 @@ const PRICING_FAQS = [
 ];
 
 export default function Pricing() {
+  const navigate = useNavigate();
   const { user } = useAuthContext();
   const isPremium = user?.plan === "premium";
   const [isLoading, setIsLoading] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) return resolve(true);
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleUpgrade = async () => {
     setIsLoading(true);
     try {
-      const res = await createCheckoutSession();
-      if (res.data.data?.url) {
-        window.location.href = res.data.data.url;
-      } else {
-        toast.success("Checkout session initialized");
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        toast.error("Razorpay SDK failed to load. Check internet connection.");
         setIsLoading(false);
+        return;
       }
+
+      const res = await createCheckoutSession();
+      const checkoutData = res.data.data;
+
+      const options = {
+        key: checkoutData.keyId,
+        amount: checkoutData.amount,
+        currency: checkoutData.currency,
+        name: "PrepView Premium",
+        description: "Unlimited AI Mock Interviews & Resume Analysis",
+        order_id: checkoutData.orderId,
+        prefill: {
+          name: checkoutData.userName,
+          email: checkoutData.userEmail,
+        },
+        theme: {
+          color: "#4F7CFF",
+        },
+        handler: async function (response: any) {
+          try {
+            await verifyPayment({
+              orderId: response.razorpay_order_id,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+            });
+            toast.success("Payment verified! Account upgraded to Premium.");
+            navigate(`/payment/success?session_id=${response.razorpay_payment_id}`);
+          } catch (err: any) {
+            toast.error(err.response?.data?.message ?? "Payment verification failed");
+          } finally {
+            setIsLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsLoading(false);
+          },
+        },
+      };
+
+      const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.open();
     } catch (err: any) {
       toast.error(err.response?.data?.message ?? "Failed to start checkout");
       setIsLoading(false);

@@ -3,12 +3,25 @@ import { paymentService } from "./payment.service";
 import { asyncHandler } from "../../shared/utils/async-handler";
 import { AppError } from "../../shared/errors/app-error";
 
-/** POST /api/v1/payments/checkout — returns Razorpay checkout details */
+/** POST /api/v1/payments/checkout — returns Razorpay order details */
 export const createCheckout = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const userEmail = req.user!.email;
   const data = await paymentService.createCheckoutSession(userId, userEmail);
   res.json({ success: true, data });
+});
+
+/** POST /api/v1/payments/verify — verifies signature and upgrades user to premium */
+export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const { orderId, paymentId, signature } = req.body;
+
+  if (!orderId || !paymentId || !signature) {
+    throw new AppError("Order ID, Payment ID, and Signature are required", 400);
+  }
+
+  const result = await paymentService.verifyPayment(userId, { orderId, paymentId, signature });
+  res.json({ success: true, data: result });
 });
 
 /** POST /api/v1/payments/portal — returns billing portal redirect */
