@@ -2,89 +2,146 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── Light theme (default) ─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   PrepView Design System v2.0
+   ───────────────────────────────────────────────────────────────────────────
+   Principles: Premium · Minimal · Confident · High-density · Low-noise
+   Aesthetic:  Soft depth, subtle motion, no unnecessary decoration
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Light theme ──────────────────────────────────────────────────────────
+   Warm paper tones. Cards feel lifted with very soft borders.
+   Text hierarchy: foreground → muted-foreground → muted-foreground/50.
+   ──────────────────────────────────────────────────────────────────────── */
 :root {
-  --background: oklch(0.98 0.002 270);
-  --foreground: oklch(0.13 0.005 270);
+  /* Canvas */
+  --background: oklch(0.975 0.002 270);
+  --foreground: oklch(0.12 0.005 270);
+
+  /* Surfaces */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.005 270);
+  --card-foreground: oklch(0.12 0.005 270);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.005 270);
-  --primary: oklch(0.52 0.18 265);
+  --popover-foreground: oklch(0.12 0.005 270);
+
+  /* Brand — Electric Blue #4F7CFF */
+  --primary: oklch(0.58 0.17 265);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.94 0.003 270);
-  --secondary-foreground: oklch(0.25 0.005 270);
-  --muted: oklch(0.94 0.003 270);
-  --muted-foreground: oklch(0.48 0.01 270);
-  --accent: oklch(0.94 0.003 270);
-  --accent-foreground: oklch(0.13 0.005 270);
+
+  /* Neutral surfaces */
+  --secondary: oklch(0.955 0.003 270);
+  --secondary-foreground: oklch(0.22 0.005 270);
+  --muted: oklch(0.955 0.003 270);
+  --muted-foreground: oklch(0.45 0.01 270);
+
+  /* Accent — same as secondary in light mode for restraint */
+  --accent: oklch(0.955 0.003 270);
+  --accent-foreground: oklch(0.12 0.005 270);
+
+  /* Semantic */
   --destructive: oklch(0.55 0.22 25);
-  --border: oklch(0 0 0 / 8%);
-  --input: oklch(0 0 0 / 8%);
-  --ring: oklch(0.52 0.18 265 / 35%);
+  --warning: oklch(0.72 0.15 75);
+  --success: oklch(0.65 0.17 155);
+
+  /* Edges */
+  --border: oklch(0 0 0 / 7%);
+  --input: oklch(0 0 0 / 7%);
+  --ring: oklch(0.58 0.17 265 / 30%);
   --radius: 0.5rem;
 
-  --chart-1: oklch(0.52 0.18 265);
+  /* Brand extended — for badges, accents, feature highlights */
+  --brand-violet: oklch(0.55 0.2 290);
+  --brand-mint: oklch(0.78 0.12 170);
+
+  /* Charts */
+  --chart-1: oklch(0.58 0.17 265);
   --chart-2: oklch(0.55 0.16 160);
   --chart-3: oklch(0.55 0.16 140);
   --chart-4: oklch(0.60 0.17 45);
   --chart-5: oklch(0.55 0.16 320);
 
+  /* Sidebar */
   --sidebar: oklch(0.96 0.002 270);
-  --sidebar-foreground: oklch(0.13 0.005 270);
-  --sidebar-primary: oklch(0.52 0.18 265);
+  --sidebar-foreground: oklch(0.12 0.005 270);
+  --sidebar-primary: oklch(0.58 0.17 265);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.94 0.003 270);
-  --sidebar-accent-foreground: oklch(0.13 0.005 270);
-  --sidebar-border: oklch(0 0 0 / 8%);
-  --sidebar-ring: oklch(0.52 0.18 265 / 35%);
+  --sidebar-accent: oklch(0.955 0.003 270);
+  --sidebar-accent-foreground: oklch(0.12 0.005 270);
+  --sidebar-border: oklch(0 0 0 / 7%);
+  --sidebar-ring: oklch(0.58 0.17 265 / 30%);
 
   color-scheme: light;
 }
 
-/* ─── Dark theme ─────────────────────────────────────────────────────────── */
+/* ─── Dark theme ───────────────────────────────────────────────────────────
+   True near-black canvas (#0B0B0C) with layered card surfaces.
+   Avoid pure black — use very dark blues for depth.
+   Borders are soft white overlays at 6-8%.
+   ──────────────────────────────────────────────────────────────────────── */
 .dark {
-  --background: oklch(0.098 0.005 270);
-  --foreground: oklch(0.95 0.005 270);
-  --card: oklch(0.13 0.005 270);
-  --card-foreground: oklch(0.95 0.005 270);
-  --popover: oklch(0.13 0.005 270);
-  --popover-foreground: oklch(0.95 0.005 270);
-  --primary: oklch(0.65 0.15 265);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.16 0.005 270);
-  --secondary-foreground: oklch(0.85 0.005 270);
-  --muted: oklch(0.16 0.005 270);
-  --muted-foreground: oklch(0.55 0.01 270);
-  --accent: oklch(0.16 0.005 270);
-  --accent-foreground: oklch(0.95 0.005 270);
-  --destructive: oklch(0.60 0.20 25);
-  --border: oklch(1 0 0 / 7%);
-  --input: oklch(1 0 0 / 7%);
-  --ring: oklch(0.65 0.15 265 / 40%);
+  /* Canvas — void-dark, not pure black */
+  --background: oklch(0.09 0.006 270);
+  --foreground: oklch(0.93 0.005 270);
 
-  --chart-1: oklch(0.65 0.15 265);
+  /* Surfaces — layered elevation */
+  --card: oklch(0.125 0.006 270);
+  --card-foreground: oklch(0.93 0.005 270);
+  --popover: oklch(0.125 0.006 270);
+  --popover-foreground: oklch(0.93 0.005 270);
+
+  /* Brand — slightly brighter in dark mode for readability */
+  --primary: oklch(0.67 0.16 265);
+  --primary-foreground: oklch(0.98 0 0);
+
+  /* Neutral surfaces — dark elevation layers */
+  --secondary: oklch(0.155 0.006 270);
+  --secondary-foreground: oklch(0.83 0.005 270);
+  --muted: oklch(0.155 0.006 270);
+  --muted-foreground: oklch(0.52 0.01 270);
+
+  /* Accent */
+  --accent: oklch(0.155 0.006 270);
+  --accent-foreground: oklch(0.93 0.005 270);
+
+  /* Semantic */
+  --destructive: oklch(0.60 0.20 25);
+  --warning: oklch(0.72 0.15 75);
+  --success: oklch(0.65 0.17 155);
+
+  /* Edges — white overlay borders */
+  --border: oklch(1 0 0 / 6%);
+  --input: oklch(1 0 0 / 6%);
+  --ring: oklch(0.67 0.16 265 / 35%);
+
+  /* Brand extended */
+  --brand-violet: oklch(0.65 0.18 290);
+  --brand-mint: oklch(0.78 0.12 170);
+
+  /* Charts */
+  --chart-1: oklch(0.67 0.16 265);
   --chart-2: oklch(0.65 0.15 160);
   --chart-3: oklch(0.65 0.15 140);
   --chart-4: oklch(0.65 0.15 45);
   --chart-5: oklch(0.65 0.15 320);
 
-  --sidebar: oklch(0.11 0.005 270);
-  --sidebar-foreground: oklch(0.95 0.005 270);
-  --sidebar-primary: oklch(0.65 0.15 265);
+  /* Sidebar */
+  --sidebar: oklch(0.105 0.006 270);
+  --sidebar-foreground: oklch(0.93 0.005 270);
+  --sidebar-primary: oklch(0.67 0.16 265);
   --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.16 0.005 270);
-  --sidebar-accent-foreground: oklch(0.95 0.005 270);
-  --sidebar-border: oklch(1 0 0 / 7%);
-  --sidebar-ring: oklch(0.65 0.15 265 / 40%);
+  --sidebar-accent: oklch(0.155 0.006 270);
+  --sidebar-accent-foreground: oklch(0.93 0.005 270);
+  --sidebar-border: oklch(1 0 0 / 6%);
+  --sidebar-ring: oklch(0.67 0.16 265 / 35%);
 
   color-scheme: dark;
 }
 
-/* ─── Base ───────────────────────────────────────────────────────────────── */
+/* ─── Base ─────────────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
 }
@@ -103,16 +160,31 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Subtle texture — prevents flat/sterile feel without decoration */
+  background-image: radial-gradient(
+    circle at 50% 0%,
+    oklch(0.58 0.04 265 / 3%) 0%,
+    transparent 60%
+  );
+}
+
+.dark body {
+  background-image: radial-gradient(
+    circle at 50% 0%,
+    oklch(0.58 0.04 265 / 5%) 0%,
+    transparent 50%
+  );
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* ─── Tailwind theme map ─────────────────────────────────────────────────── */
+/* ─── Tailwind theme map ───────────────────────────────────────────────── */
 @theme inline {
   --font-sans: "Geist Variable", -apple-system, system-ui, sans-serif;
   --font-heading: "Geist Variable", -apple-system, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", "Cascadia Code", ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -144,6 +216,12 @@ body {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  /* Brand extended */
+  --color-brand-violet: var(--brand-violet);
+  --color-brand-mint: var(--brand-mint);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  /* Radii */
   --radius-sm: calc(var(--radius) * 0.75);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) * 1.5);
@@ -163,9 +241,8 @@ body {
   }
 }
 
-/* ─── Print styles (for PDF export from Report page) ─────────────────────── */
+/* ─── Print styles (for PDF export from Report page) ──────────────────── */
 @media print {
-  /* Hide navigation elements */
   header,
   aside,
   nav,
@@ -179,13 +256,11 @@ body {
     font-size: 12px;
   }
 
-  /* Expand content to full width */
   .mx-auto {
     max-width: 100% !important;
     padding: 0 1rem !important;
   }
 
-  /* Remove shadows and make borders print-friendly */
   * {
     box-shadow: none !important;
     -webkit-print-color-adjust: exact;
