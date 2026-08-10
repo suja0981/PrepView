@@ -29,7 +29,7 @@ export function createApp() {
   app.use(helmet());
   app.use(cors(corsOptions));
 
-  // Stripe Webhook MUST receive raw Buffer BEFORE express.json() parses the request
+  // Razorpay Webhook MUST receive raw Buffer BEFORE express.json() parses the request
   app.use(
     "/api/v1/payments/webhook",
     express.raw({ type: "application/json" }),

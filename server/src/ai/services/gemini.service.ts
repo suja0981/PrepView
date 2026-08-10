@@ -42,6 +42,10 @@ export async function callGemini(prompt: string): Promise<any> {
 
   const raw = response.choices[0]?.message?.content ?? "";
 
+  if (!raw.trim()) {
+    throw new Error("AI service returned an empty response. Please try again.");
+  }
+
   try {
     return JSON.parse(stripFences(raw));
   } catch {
@@ -57,6 +61,10 @@ export async function callGemini(prompt: string): Promise<any> {
       response_format: { type: "json_object" },
       temperature: 0.3,
     });
-    return JSON.parse(stripFences(retry.choices[0]?.message?.content ?? "{}"));
+    const retryRaw = retry.choices[0]?.message?.content ?? "";
+    if (!retryRaw.trim()) {
+      throw new Error("AI service failed to return valid JSON after retry. Please try again.");
+    }
+    return JSON.parse(stripFences(retryRaw));
   }
 }

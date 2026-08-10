@@ -38,7 +38,14 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response) =
 
   return res.status(200).json({
     success: true,
-    data: { id: user.id, name: user.name, email: user.email, role: user.role },
+    data: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      plan: user.plan,
+      planExpiresAt: user.planExpiresAt ?? null,
+    },
   });
 });
 
