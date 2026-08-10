@@ -20,6 +20,8 @@ export function createApp() {
   const app = express();
 
   app.disable("x-powered-by");
+  // Trust first proxy hop (Render / Vercel / Cloudflare) for express-rate-limit IP detection
+  app.set("trust proxy", 1);
 
   app.use(
     pinoHttp({
