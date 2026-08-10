@@ -43,10 +43,9 @@ export async function razorpayWebhook(
   const signature = req.headers["x-razorpay-signature"] as string;
 
   try {
+    // express.raw() guarantees req.body is a Buffer on this route
     const rawBody = req.body as Buffer;
-    const event = typeof req.body === "object" && !Buffer.isBuffer(req.body)
-      ? req.body
-      : JSON.parse(rawBody.toString());
+    const event = JSON.parse(rawBody.toString("utf-8"));
 
     await paymentService.handleWebhook(event, signature, rawBody);
     res.json({ status: "ok" });

@@ -7,7 +7,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/context/AuthContext";
-import { createCheckoutSession, createPortalSession } from "@/api/payment.api";
+import { createCheckoutSession, createPortalSession, verifyPayment } from "@/api/payment.api";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/motion";
 
 const FREE_FEATURES = [

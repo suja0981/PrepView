@@ -17,27 +17,29 @@ const PREFERRED_WEIGHT = 20;
  * are correctly matched.
  */
 export function calculateAtsScore(extraction: ResumeExtraction): AtsScoreResult {
-  const candidateSkills = extraction.candidateSkills;
+  const candidateSkills = extraction.candidateSkills ?? [];
+  const jdRequiredSkills = extraction.jdRequiredSkills ?? [];
+  const jdPreferredSkills = extraction.jdPreferredSkills ?? [];
 
-  const matchedSkills = extraction.jdRequiredSkills.filter((jdSkill) =>
+  const matchedSkills = jdRequiredSkills.filter((jdSkill) =>
     candidateSkills.some((cSkill) => isSkillMatch(cSkill, jdSkill)),
   );
 
-  const missingSkills = extraction.jdRequiredSkills.filter(
+  const missingSkills = jdRequiredSkills.filter(
     (jdSkill) => !candidateSkills.some((cSkill) => isSkillMatch(cSkill, jdSkill)),
   );
 
   // No required skills listed in the JD -> don't penalise, give full marks for this part.
-  const requiredScore = extraction.jdRequiredSkills.length
-    ? (matchedSkills.length / extraction.jdRequiredSkills.length) * REQUIRED_WEIGHT
+  const requiredScore = jdRequiredSkills.length
+    ? (matchedSkills.length / jdRequiredSkills.length) * REQUIRED_WEIGHT
     : REQUIRED_WEIGHT;
 
-  const preferredMatched = extraction.jdPreferredSkills.filter((jdSkill) =>
+  const preferredMatched = jdPreferredSkills.filter((jdSkill) =>
     candidateSkills.some((cSkill) => isSkillMatch(cSkill, jdSkill)),
   );
 
-  const preferredScore = extraction.jdPreferredSkills.length
-    ? (preferredMatched.length / extraction.jdPreferredSkills.length) * PREFERRED_WEIGHT
+  const preferredScore = jdPreferredSkills.length
+    ? (preferredMatched.length / jdPreferredSkills.length) * PREFERRED_WEIGHT
     : 0;
 
   return {
