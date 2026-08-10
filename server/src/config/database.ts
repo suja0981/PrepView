@@ -13,6 +13,11 @@ export async function connectDatabase(): Promise<void> {
     await mongoose.connect(env.MONGODB_URI);
     isConnected = true;
     logger.info("MongoDB connection established");
+
+    // Sync all schema indexes on startup — drops stale indexes (e.g. old stripeEventId_1)
+    // and creates any new ones defined in current Mongoose schemas.
+    await mongoose.syncIndexes();
+    logger.info("MongoDB indexes synced");
   } catch (error) {
     logger.error({ error }, "Failed to connect to MongoDB");
     throw error;
