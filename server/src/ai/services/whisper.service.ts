@@ -2,7 +2,7 @@ import Groq from "groq-sdk";
 import fs from "fs";
 import { env } from "../../config/env";
 
-const groq = new Groq({ apiKey: env.GROQ_API_KEY });
+const groq = new Groq({ apiKey: env.GROQ_API_KEY || "gsk_dummy_test_key" });
 
 /**
  * Transcribes an audio file using Groq's free whisper-large-v3-turbo model.

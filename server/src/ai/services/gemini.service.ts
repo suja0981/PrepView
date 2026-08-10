@@ -9,7 +9,7 @@ import { env } from "../../config/env";
 //   mixtral-8x7b-32768    → large context window
 const MODEL = "llama-3.1-8b-instant";
 
-const groq = new Groq({ apiKey: env.GROQ_API_KEY });
+const groq = new Groq({ apiKey: env.GROQ_API_KEY || "gsk_dummy_test_key" });
 
 /** Strip markdown code fences that LLMs sometimes wrap around JSON */
 function stripFences(text: string): string {
