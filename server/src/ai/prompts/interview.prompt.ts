@@ -1,74 +1,128 @@
+// ── Domain-specific prompt builders for PrepView interview engine ──────────────
+// Each interview type gets its own question strategy and evaluation rubric.
+// Company field removed — replaced by role presets and tech stacks.
+
 interface QuestionPromptInput {
   role: string;
   type: string;
   difficulty: string;
-  company?: string;
   techStacks?: string;
+  mode?: "voice" | "text";
   previousQuestion?: string;
   previousAnswer?: string;
   evaluationFeedback?: string;
-  // Topics already asked — AI should avoid repeating them
+  weakestDimension?: string; // "technicalAccuracy" | "reasoning" | "communication"
   coveredTopics?: string[];
-  // When true, the AI digs deeper on the same weak topic instead of moving on
   isFollowUp?: boolean;
 }
 
-// Returns topic-specific guidance based on interview type
-function getTypeGuidance(type: string, techStacks?: string): string {
-  switch (type) {
-    case "behavioral":
-      return "Ask a behavioral question (STAR format expected). Focus on situations, actions, and outcomes.";
-    case "dsa":
-      return "Ask a Data Structures & Algorithms question. Focus on array/string manipulation, trees, graphs, dynamic programming, or sorting. Expect the candidate to walk through the approach AND explain time/space complexity.";
-    case "system_design":
-      return "Ask a system design question. Focus on scalability, trade-offs, database choices, API design, or distributed systems. Expect the candidate to discuss architecture options and trade-offs.";
-    case "mixed":
-      return "Alternate between technical, behavioral, and system design questions. Keep each question clearly in one domain.";
+// ── Difficulty calibration by experience level ────────────────────────────────
+function getDifficultyContext(difficulty: string): string {
+  switch (difficulty) {
+    case "easy":
+      return "Target: entry-level (0–1 years experience). Ask foundational questions. Avoid advanced system internals.";
+    case "hard":
+      return "Target: senior engineer (4+ years). Expect deep trade-off discussions, edge cases, and architectural decisions.";
     default:
-      // technical
-      return `Ask a technical question. Focus on concepts, code, architecture, or problem-solving.${
-        techStacks ? ` The questions MUST heavily focus on these technologies: ${techStacks}` : ""
-      }`;
+      return "Target: mid-level engineer (1–3 years experience). Expect solid fundamentals and some real-world experience.";
   }
 }
 
+// ── Type-specific question strategy ──────────────────────────────────────────
+function getQuestionStrategy(type: string, role: string, techStacks?: string): string {
+  const stack = techStacks ? ` Focus heavily on: ${techStacks}.` : "";
+
+  switch (type) {
+    case "behavioral":
+      return `Ask a behavioral question in STAR format (Situation, Task, Action, Result).
+Topics: teamwork, conflict resolution, deadlines, failure/learning, ownership, communication.
+Push for specific real examples — reject vague hypotheticals.${stack}`;
+
+    case "system_design":
+      return `Ask a system design question appropriate for a ${role}.
+Follow this structure: scale requirements → high-level components → data model → API design → trade-offs → failure modes.
+Avoid questions that need a whiteboard — ask ones a candidate can reason through verbally.${stack}`;
+
+    case "mixed":
+      return `Alternate between technical concept, behavioral, and light system design questions.
+Keep each question clearly in one domain. Do not mix domains within a single question.${stack}`;
+
+    default:
+      // technical — the broadest type, covers all non-SDE domains too
+      return `Ask a technical question that tests real on-the-job knowledge for a ${role}.${stack}
+Focus on: concepts, debugging scenarios, tool/framework internals, or real-world problem-solving.
+Avoid purely theoretical or academic questions.`;
+  }
+}
+
+// ── Domain-specific depth hints injected per role category ───────────────────
+function getRoleContext(role: string): string {
+  const r = role.toLowerCase();
+
+  if (r.includes("qa") || r.includes("test") || r.includes("sdet")) {
+    return "Focus on test strategy, test case design, automation frameworks (Selenium, Cypress, Playwright, Jest), bug reporting, and shift-left testing practices.";
+  }
+  if (r.includes("devops") || r.includes("sre") || r.includes("platform") || r.includes("infrastructure")) {
+    return "Focus on CI/CD pipelines, container orchestration (Docker, Kubernetes), monitoring/alerting, incident management, and infrastructure-as-code.";
+  }
+  if (r.includes("data engineer") || r.includes("etl") || r.includes("data pipeline")) {
+    return "Focus on data pipelines, batch vs streaming (Kafka, Spark, Airflow), data warehouse design (Snowflake, BigQuery), and data quality.";
+  }
+  if (r.includes("data analyst") || r.includes("business analyst") || r.includes("analytics")) {
+    return "Focus on SQL proficiency, data modelling, dashboards (Tableau, Looker), metrics definition, A/B testing, and translating data to business insights.";
+  }
+  if (r.includes("ml") || r.includes("machine learning") || r.includes("ai engineer") || r.includes("data scientist")) {
+    return "Focus on model training/evaluation, feature engineering, overfitting/underfitting trade-offs, model deployment, MLOps, and practical ML system design.";
+  }
+  if (r.includes("mobile") || r.includes("ios") || r.includes("android")) {
+    return "Focus on mobile architecture (MVC/MVVM), state management, lifecycle, networking, performance optimisation, and app store deployment.";
+  }
+  if (r.includes("cloud") || r.includes("solutions architect")) {
+    return "Focus on cloud services (AWS/GCP/Azure), cost optimisation, security best practices, serverless, and multi-region architecture.";
+  }
+  if (r.includes("product manager") || r.includes("apm") || r.includes("product")) {
+    return "Focus on product thinking, prioritisation frameworks (RICE, MoSCoW), PRD writing, metrics definition, and cross-functional stakeholder management.";
+  }
+  // default: generic SDE / fullstack
+  return "";
+}
+
+// ── Main question prompt builder ──────────────────────────────────────────────
 export function buildQuestionPrompt(data: QuestionPromptInput): string {
   const isFirst = !data.previousQuestion;
-  const typeGuidance = getTypeGuidance(data.type, data.techStacks);
+  const strategy = getQuestionStrategy(data.type, data.role, data.techStacks);
+  const difficultyCtx = getDifficultyContext(data.difficulty);
+  const roleCtx = getRoleContext(data.role);
 
-  // Follow-up mode: dig deeper on the same weak topic
-  const followUpPrefix = data.isFollowUp
-    ? `The candidate gave a WEAK answer to the previous question. Do NOT move on to a new topic.
-Instead, ask a targeted follow-up question that probes the same concept more deeply.
-Help uncover whether the gap is conceptual or just lack of articulation.`
+  const topicAvoidance = data.coveredTopics?.length
+    ? `Topics already covered — do NOT repeat: ${data.coveredTopics.join(", ")}.`
     : "";
 
-  // Topic tracking: prevent AI from repeating already-asked topics
-  const topicAvoidance =
-    data.coveredTopics && data.coveredTopics.length > 0
-      ? `Topics already covered in this session (DO NOT ask about these again): ${data.coveredTopics.join(", ")}.
-Choose a fresh, distinct topic for the next question.`
-      : "";
+  // Follow-up: probe the specific weak dimension rather than a generic re-ask
+  const followUpBlock = data.isFollowUp
+    ? `The candidate gave a weak answer. Do NOT move to a new topic.
+Ask a targeted follow-up that probes the same concept more deeply.
+${data.weakestDimension === "technicalAccuracy" ? "Their explanation sounded fluent but was technically incorrect. Test whether they truly understand the concept." : ""}
+${data.weakestDimension === "reasoning" ? "They identified the right concept but could not reason through the trade-offs or edge cases. Push on that." : ""}
+${data.weakestDimension === "communication" ? "Their thinking seems correct but they struggled to articulate it. Ask them to explain in a simpler way." : ""}`
+    : "";
 
-  const contextBlock = isFirst
-    ? ""
-    : `
+  const contextBlock = isFirst ? "" : `
 Previous question: ${data.previousQuestion}
-Candidate answer: ${data.previousAnswer}
+Candidate's answer: ${data.previousAnswer}
 ${data.evaluationFeedback ? `Feedback on that answer: ${data.evaluationFeedback}` : ""}
-${data.isFollowUp ? "" : "Generate the next logical question on a new topic."}`;
+${!data.isFollowUp ? "Generate the next question on a fresh topic." : ""}`;
 
-  return `You are a senior ${data.role} interviewer at ${data.company ?? "a top tech company"}.
-
-Interview type: ${data.type}
-Difficulty: ${data.difficulty}
-${typeGuidance}
+  return `You are a professional technical interviewer conducting a ${data.type} interview for a ${data.role} role.
+${difficultyCtx}
+${roleCtx}
+${strategy}
 ${topicAvoidance}
-${followUpPrefix}
+${followUpBlock}
 ${contextBlock}
 
-Respond ONLY with JSON:
-{"question":"...","topic":"..."}`;
+Respond ONLY with valid JSON:
+{"question":"<your question here>","topic":"<short topic label>"}`;
 }
 
 // ── Evaluation prompt ─────────────────────────────────────────────────────────
@@ -79,45 +133,52 @@ interface EvaluationPromptInput {
   role: string;
   type: string;
   difficulty: string;
+  mode?: "voice" | "text";
 }
 
-function getEvalTypeNote(type: string): string {
+function getEvalRubric(type: string): string {
   switch (type) {
     case "behavioral":
-      return "Check for STAR format (Situation, Task, Action, Result). Penalise vague, story-less answers. Reward specific examples with measurable outcomes.";
-    case "dsa":
-      return "Check: (1) Correct algorithm choice, (2) Accurate time and space complexity explanation, (3) Handling of edge cases. Penalise answers that only describe the approach without mentioning Big-O.";
+      return "Check for STAR structure: Situation, Task, Action, Result. Penalise vague or hypothetical answers. Reward specific examples with measurable outcomes.";
     case "system_design":
-      return "Check: (1) Did they identify scale requirements? (2) Did they discuss trade-offs between options? (3) Did they choose appropriate data stores and APIs? Penalise answers that jump to solutions without discussing trade-offs.";
+      return "Check: (1) Did they address scale? (2) Did they discuss trade-offs between design options? (3) Did they choose appropriate data stores and APIs? (4) Did they mention failure modes? Penalise jumping to solutions without trade-off analysis.";
+    case "dsa":
+      return "Check: (1) Correct algorithm approach, (2) Time and space complexity stated explicitly, (3) Edge cases handled. Penalise answers that describe the approach without Big-O analysis.";
     default:
-      return "Check technical accuracy, depth, and clarity of explanation.";
+      return "Check technical accuracy, practical depth, and clarity of explanation. Reward real-world reasoning over textbook definitions.";
   }
 }
 
 export function buildEvaluationPrompt(data: EvaluationPromptInput): string {
-  const scale =
+  const rubric = getEvalRubric(data.type);
+
+  const difficultyStandard =
     data.difficulty === "hard"
-      ? "Evaluate at a senior/staff engineer standard. Be strict."
+      ? "Apply a senior engineer bar. Be strict on depth and trade-off awareness."
       : data.difficulty === "easy"
-      ? "Evaluate at a junior level. Be fair and encouraging."
-      : "Evaluate at a mid-level engineer standard.";
+      ? "Apply a junior engineer bar. Be fair and encouraging. Reward foundational understanding."
+      : "Apply a mid-level engineer bar. Expect solid fundamentals and some practical experience.";
 
-  const typeNote = getEvalTypeNote(data.type);
+  // Voice responses are naturally conversational — penalise grammar/style less
+  const voiceNote = data.mode === "voice"
+    ? "IMPORTANT: This is a spoken voice response. The candidate may use filler words and conversational phrasing. Judge the conceptual quality of their answer, not grammar or sentence structure."
+    : "";
 
-  return `You are evaluating a ${data.role} candidate.
-${scale}
-${typeNote}
+  return `You are evaluating a ${data.role} candidate on a ${data.type} question.
+${difficultyStandard}
+${rubric}
+${voiceNote}
 
 Question: ${data.question}
-Answer: ${data.answer}
+Candidate's answer: ${data.answer}
 
-Respond ONLY with JSON:
+Respond ONLY with valid JSON:
 {
   "technicalAccuracy": <0-10>,
   "reasoning": <0-10>,
   "communication": <0-10>,
   "overallScore": <0-10>,
-  "feedback": "<2-3 sentence specific feedback>",
+  "feedback": "<2-3 sentence specific, actionable feedback>",
   "weakTopics": ["<topic>"]
 }`;
 }

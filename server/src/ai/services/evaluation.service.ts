@@ -7,6 +7,7 @@ export interface EvaluateAnswerInput {
   role: string;
   type: string;
   difficulty: "easy" | "medium" | "hard";
+  mode?: "voice" | "text";
 }
 
 export async function evaluateAnswer(data: EvaluateAnswerInput) {
