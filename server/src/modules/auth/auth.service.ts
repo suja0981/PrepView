@@ -64,7 +64,7 @@ class AuthService {
       new Date(user.planExpiresAt).getTime() < Date.now()
     ) {
       user.plan = "free";
-      user.stripeSubscriptionId = null;
+      user.razorpaySubscriptionId = null;
       user.planExpiresAt = null;
       await user.save();
     }

@@ -1,6 +1,6 @@
 import { Schema, model, Types } from "mongoose";
 
-// Audit log of every Stripe event we process.
+// Audit log of every payment gateway event processed.
 // Lets you debug billing issues without touching the User model directly.
 const paymentLogSchema = new Schema(
   {
@@ -10,7 +10,7 @@ const paymentLogSchema = new Schema(
       required: true,
       index: true,
     },
-    stripeEventId: {
+    eventId: {
       type: String,
       required: true,
       unique: true, // prevent double-processing the same webhook

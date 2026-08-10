@@ -33,7 +33,7 @@ const PREMIUM_FEATURES = [
 const PRICING_FAQS = [
   {
     q: "Can I cancel my subscription anytime?",
-    a: "Yes, you can cancel your subscription at any time directly through the Stripe customer portal with a single click. You will retain access until the end of your billing cycle.",
+    a: "Yes, you can cancel your subscription at any time directly through your billing portal with a single click. You will retain access until the end of your billing cycle.",
   },
   {
     q: "How does the 3 free interviews limit work?",
@@ -41,7 +41,7 @@ const PRICING_FAQS = [
   },
   {
     q: "Is payment information securely handled?",
-    a: "All payment processing is handled by Stripe. PrepView does not store or process your credit card details.",
+    a: "All payment processing is handled securely by Razorpay. PrepView does not store or process your credit card details.",
   },
 ];
 
@@ -56,7 +56,12 @@ export default function Pricing() {
     setIsLoading(true);
     try {
       const res = await createCheckoutSession();
-      window.location.href = res.data.data.url;
+      if (res.data.data?.url) {
+        window.location.href = res.data.data.url;
+      } else {
+        toast.success("Checkout session initialized");
+        setIsLoading(false);
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.message ?? "Failed to start checkout");
       setIsLoading(false);
@@ -194,7 +199,7 @@ export default function Pricing() {
                   className="w-full h-9 text-[13px] font-medium gap-1.5 shadow-sm shadow-primary/20"
                 >
                   {isLoading
-                    ? <><Loader2 size={14} className="animate-spin" /> Redirecting to Stripe...</>
+                    ? <><Loader2 size={14} className="animate-spin" /> Preparing checkout...</>
                     : <>Upgrade now <ArrowRight size={13} /></>
                   }
                 </Button>
@@ -208,7 +213,7 @@ export default function Pricing() {
       <FadeIn delay={0.2}>
         <div className="flex flex-wrap justify-center gap-6 text-[12px] text-muted-foreground pt-2">
           <span className="flex items-center gap-1.5"><RefreshCw size={12} className="text-emerald-500" /> Cancel anytime</span>
-          <span className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-emerald-500" /> Secure payments via Stripe</span>
+          <span className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-emerald-500" /> Secure payments via Razorpay</span>
           <span className="flex items-center gap-1.5"><Zap size={12} className="text-emerald-500" /> Instant activation</span>
         </div>
       </FadeIn>

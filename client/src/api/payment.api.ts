@@ -1,9 +1,9 @@
 import { apiClient } from "./axios";
 
-/** Redirects to Stripe Checkout — returns the checkout URL */
+/** Fetches Razorpay checkout parameters or session URL */
 export const createCheckoutSession = () =>
-  apiClient.post<{ success: boolean; data: { url: string } }>("/payments/checkout");
+  apiClient.post<{ success: boolean; data: any }>("/payments/checkout");
 
-/** Redirects to Stripe Customer Portal (manage/cancel subscription) */
+/** Manages subscription or billing account */
 export const createPortalSession = () =>
   apiClient.post<{ success: boolean; data: { url: string } }>("/payments/portal");

@@ -15,12 +15,12 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string(),
   GEMINI_API_KEY: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
-  // Stripe — use test keys from https://dashboard.stripe.com/test/apikeys
-  STRIPE_SECRET_KEY: z.string().default("sk_test_placeholder"),
-  STRIPE_WEBHOOK_SECRET: z.string().default("whsec_placeholder"),
-  // Create a product + price in Stripe Dashboard, paste the price ID here
-  STRIPE_PRICE_ID: z.string().default("price_placeholder"),
-  // Frontend URL — used for Stripe checkout success/cancel redirects
+  // Razorpay — payment gateway configuration
+  RAZORPAY_KEY_ID: z.string().default("rzp_test_placeholder"),
+  RAZORPAY_KEY_SECRET: z.string().default("secret_placeholder"),
+  RAZORPAY_WEBHOOK_SECRET: z.string().default("whsec_placeholder"),
+  RAZORPAY_PLAN_ID: z.string().default("plan_placeholder"),
+  // Frontend URL — used for checkout redirects
   CLIENT_URL: z.string().default("http://localhost:5173"),
 });
 
