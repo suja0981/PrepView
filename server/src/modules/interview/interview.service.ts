@@ -18,7 +18,7 @@ import { InterviewModel } from "./interview.model";
 const FREE_MONTHLY_TEXT_LIMIT = 3;
 // Features that require Premium
 const PREMIUM_MODES = ["voice"];
-const PREMIUM_TYPES = ["dsa", "system_design"];
+const PREMIUM_TYPES = ["system_design"];
 const PREMIUM_DIFFICULTIES = ["hard"];
 
 
@@ -82,9 +82,9 @@ class InterviewService {
     const prompt = buildQuestionPrompt({
       role: data.role,
       type: data.type,
-      company: data.company,
       difficulty: data.difficulty,
       techStacks: data.techStacks,
+      mode: data.mode,
     });
 
     const questionData = await callGemini(prompt);
@@ -149,6 +149,7 @@ class InterviewService {
       role: interview.role,
       type: interview.type,
       difficulty: interview.difficulty,
+      mode: interview.mode as "voice" | "text",
     });
 
     // 6. Save evaluation
@@ -210,17 +211,28 @@ class InterviewService {
     const previousQuestions = await questionRepository.findByInterview(interviewId);
     const coveredTopics = previousQuestions.map((q) => q.topic).filter(Boolean);
 
+    // Find the weakest scoring dimension to give targeted follow-up questions
+    const dims = {
+      technicalAccuracy: evaluation.technicalAccuracy,
+      reasoning: evaluation.reasoning,
+      communication: evaluation.communication,
+    };
+    const weakestDimension = isFollowUp
+      ? (Object.entries(dims).sort(([, a], [, b]) => a - b)[0][0])
+      : undefined;
+
     const prompt = buildQuestionPrompt({
       role: interview.role,
       type: interview.type,
-      company: interview.company || undefined,
       difficulty: interview.difficulty,
       techStacks: interview.techStacks || undefined,
+      mode: interview.mode as "voice" | "text",
       previousQuestion: question.question,
       previousAnswer: data.answer,
       evaluationFeedback: evaluation.feedback,
       coveredTopics,
       isFollowUp,
+      weakestDimension,
     });
 
     const nextQuestion = await callGemini(prompt);

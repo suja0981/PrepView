@@ -28,12 +28,6 @@ const interviewSchema = new Schema(
       default: "voice",
     },
 
-    company: {
-      type: String,
-      trim: true,
-      default: null,
-    },
-
     techStacks: {
       type: String,
       trim: true,
