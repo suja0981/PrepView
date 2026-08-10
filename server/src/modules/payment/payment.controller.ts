@@ -1,23 +1,17 @@
 import { Request, Response, NextFunction } from "express";
-import Stripe from "stripe";
-import { env } from "../../config/env";
 import { paymentService } from "./payment.service";
 import { asyncHandler } from "../../shared/utils/async-handler";
 import { AppError } from "../../shared/errors/app-error";
 
-const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2026-06-24.dahlia",
-});
-
-/** POST /api/v1/payments/checkout — returns Stripe Checkout URL */
+/** POST /api/v1/payments/checkout — returns Razorpay checkout details */
 export const createCheckout = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const userEmail = req.user!.email;
-  const url = await paymentService.createCheckoutSession(userId, userEmail);
-  res.json({ success: true, data: { url } });
+  const data = await paymentService.createCheckoutSession(userId, userEmail);
+  res.json({ success: true, data });
 });
 
-/** POST /api/v1/payments/portal — returns Stripe Customer Portal URL */
+/** POST /api/v1/payments/portal — returns billing portal redirect */
 export const createPortal = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const url = await paymentService.createPortalSession(userId);
@@ -26,30 +20,23 @@ export const createPortal = asyncHandler(async (req: Request, res: Response) => 
 
 /**
  * POST /api/v1/payments/webhook
- * Called by Stripe. Must use raw body (NOT JSON parsed) for signature verification.
- * This route is registered BEFORE express.json() in app.ts.
+ * Called by Razorpay. Uses raw body buffer for HMAC signature verification.
  */
-export async function stripeWebhook(
+export async function razorpayWebhook(
   req: Request,
   res: Response,
   next: NextFunction,
 ) {
-  const sig = req.headers["stripe-signature"] as string;
-
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body as Buffer, // raw buffer — NOT parsed JSON
-      sig,
-      env.STRIPE_WEBHOOK_SECRET,
-    );
-  } catch (err: any) {
-    return next(new AppError(`Webhook signature verification failed: ${err.message}`, 400));
-  }
+  const signature = req.headers["x-razorpay-signature"] as string;
 
   try {
-    await paymentService.handleWebhook(event);
-    res.json({ received: true });
+    const rawBody = req.body as Buffer;
+    const event = typeof req.body === "object" && !Buffer.isBuffer(req.body)
+      ? req.body
+      : JSON.parse(rawBody.toString());
+
+    await paymentService.handleWebhook(event, signature, rawBody);
+    res.json({ status: "ok" });
   } catch (err) {
     next(err);
   }

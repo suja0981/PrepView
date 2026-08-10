@@ -65,7 +65,7 @@
 | Database     | MongoDB (Atlas), Mongoose                           |
 | Auth         | JWT, httpOnly Cookies, bcrypt                       |
 | AI           | Groq (Llama 3.1 8B Instant / 70B Versatile)        |
-| Payments     | Stripe (Subscriptions, Checkout, Customer Portal)   |
+| Payments     | Razorpay (Subscriptions, Orders, Webhooks)           |
 | Infra        | Docker, Render (API), Vercel (Frontend)             |
 
 ---

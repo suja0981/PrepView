@@ -35,12 +35,12 @@ const userSchema = new Schema({
     enum: ["free", "premium"],
     default: "free",
   },
-  // Stripe IDs for customer portal and subscription management
-  stripeCustomerId: {
+  // Razorpay IDs for subscription management
+  razorpayCustomerId: {
     type: String,
     default: null,
   },
-  stripeSubscriptionId: {
+  razorpaySubscriptionId: {
     type: String,
     default: null,
   },

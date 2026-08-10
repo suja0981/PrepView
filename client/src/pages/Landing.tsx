@@ -98,7 +98,7 @@ const faqs = [
   },
   {
     q: "Can I cancel my Premium subscription anytime?",
-    a: "Yes. You can cancel from your account at any time through the Stripe customer portal. No questions asked.",
+    a: "Yes. You can cancel from your account at any time through your billing settings. No questions asked.",
   },
 ];
 

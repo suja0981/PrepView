@@ -64,7 +64,7 @@ export async function analyzeResumeHandler(
         // Log this analysis
         await PaymentLog.create({
           userId,
-          stripeEventId: `resume_${userId}_${Date.now()}`,
+          eventId: `resume_${userId}_${Date.now()}`,
           type: "resume_analysis",
           status: "success",
         });

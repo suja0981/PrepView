@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Shown after Stripe redirects back to the app on successful payment.
+ * Shown after successful payment gateway checkout.
  * The plan may not be updated yet (webhook is async), so we show a
  * friendly "activating" message for a few seconds before showing the CTA.
  */
@@ -17,7 +17,7 @@ export default function PaymentSuccess() {
   const { refetchUser } = useAuthContext();
 
   useEffect(() => {
-    // Give the Stripe webhook ~3s to fire and update the user plan in DB, then refetch
+    // Give the payment webhook ~3s to fire and update the user plan in DB, then refetch
     const timer = setTimeout(() => {
       setIsActivating(false);
       refetchUser();

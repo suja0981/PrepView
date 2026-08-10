@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { XCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/** Shown when user cancels out of the Stripe checkout page */
+/** Shown when user cancels out of the checkout page */
 export default function PaymentCancel() {
   return (
     <div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-6">
