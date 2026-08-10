@@ -7,6 +7,7 @@ import {
   getInterviewReport,
   getUserInterviews,
   submitAnswer,
+  transcribeAudio,
 } from "./interview.controller";
 
 import { authenticate } from "../../shared/middleware/auth.middleware";
@@ -33,5 +34,12 @@ interviewRouter.post("/:id/answer", answerRateLimit, validate(SubmitAnswerSchema
 interviewRouter.get("/:id/report", getInterviewReport);
 
 interviewRouter.get("/:id/details", getInterviewDetails);
+
+import multer from "multer";
+import os from "os";
+
+const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+interviewRouter.post("/transcribe", upload.single("audio"), transcribeAudio);
 
 export { interviewRouter };

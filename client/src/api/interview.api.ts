@@ -37,3 +37,14 @@ export const getInterviewDetails = async (id: string) => {
   const res = await api.get(`/interviews/${id}/details`);
   return res.data;
 };
+
+export const transcribeAudio = async (audioBlob: Blob) => {
+  const formData = new FormData();
+  formData.append("audio", audioBlob, "speech.webm");
+  const res = await api.post<{ success: boolean; data: { transcript: string } }>(
+    "/interviews/transcribe",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return res.data;
+};

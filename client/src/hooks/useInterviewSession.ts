@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { getInterview, submitAnswer } from "@/api/interview.api";
 import { useSpeechRecognition } from "./useSpeechRecognition";
 import { useTimer } from "./useTimer";
+import { useAudioRecorder } from "./useAudioRecorder";
+import { transcribeAudio } from "@/api/interview.api";
 
 export type InterviewStatus =
   | "idle"
@@ -92,12 +94,21 @@ export const useInterviewSession = (interviewId: string) => {
     return () => { active = false; };
   }, [interviewId, navigate]);
 
+  const {
+    isRecording,
+    audioBlob,
+    startRecording,
+    stopRecording,
+    clearAudio,
+  } = useAudioRecorder();
+
   const startInterview = useCallback(() => {
     if (!currentQuestion) return;
     setStatus("listening");
     startTimer();
     startListening();
-  }, [currentQuestion, startTimer, startListening]);
+    startRecording();
+  }, [currentQuestion, startTimer, startListening, startRecording]);
 
   // Called when user clicks "Next question" in the feedback panel
   const handleContinueToNext = useCallback(() => {
@@ -109,10 +120,12 @@ export const useInterviewSession = (interviewId: string) => {
     setPendingIsFollowUp(false);
     resetTranscript();
     resetTimer();
+    clearAudio();
     setStatus("listening");
     startTimer();
     startListening();
-  }, [pendingNextQuestion, resetTranscript, resetTimer, startTimer, startListening]);
+    startRecording();
+  }, [pendingNextQuestion, resetTranscript, resetTimer, clearAudio, startTimer, startListening, startRecording]);
 
   const handleSubmit = useCallback(async () => {
     if (!currentQuestion || status !== "listening") return;
@@ -121,11 +134,26 @@ export const useInterviewSession = (interviewId: string) => {
     setStatus("submitting");
     stopTimer();
     stopListening();
+    stopRecording();
+
+    let finalAnswer = transcript;
+
+    // Optional Whisper fallback if browser STT is short but audio was recorded
+    if (audioBlob && finalAnswer.trim().split(/\s+/).length < MIN_SPOKEN_WORDS) {
+      try {
+        const whisperRes = await transcribeAudio(audioBlob);
+        if (whisperRes.data?.transcript) {
+          finalAnswer = whisperRes.data.transcript;
+        }
+      } catch {
+        // Fallback to browser transcript if network upload fails
+      }
+    }
 
     try {
       const res = await submitAnswer(interviewId, {
         questionId: currentQuestion._id,
-        answer: transcript,
+        answer: finalAnswer || transcript,
         responseTime: seconds || 1,
       });
 
