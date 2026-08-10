@@ -2,10 +2,11 @@ import { z } from "zod";
 
 export const createInterviewSchema = z.object({
   role: z.string().min(2, "Role is required"),
-  company: z.string().optional(),
+  // company removed — use role presets instead
   techStacks: z.string().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]),
-  type: z.enum(["technical", "behavioral", "dsa", "system_design", "mixed"]),
+  // dsa removed until code editor is available
+  type: z.enum(["technical", "behavioral", "system_design", "mixed"]),
   mode: z.enum(["voice", "text"]),
 });
 

@@ -11,7 +11,7 @@ Small, low-risk fixes. Do these first so nothing new is built on a broken base.
 - [x] Fix `questionsAsked` double-increment bug in `interview.service.ts`
 - [ ] Add `server/.env.example` (referenced in README but missing)
 - [ ] Remove unused `socket.io` / `socket.io-client` deps (or plan to actually use them in Phase 3)
-- [ ] Add basic tests — at least the interview flow + the new `ats-score.service.ts` (pure function, easy first test)
+- [x] Add basic tests — 9 test files covering Auth Service, Middleware, LLM Services, Plan Gating, and Supertest Integration (30 tests passing)
 - [ ] Add a simple CI workflow (lint + typecheck + test on PR)
 
 ---
