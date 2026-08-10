@@ -17,7 +17,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(8).default("super-secret-jwt-test-key-12345"),
   JWT_EXPIRES_IN: z.string().default("7d"),
   GEMINI_API_KEY: z.string().optional(),
-  GROQ_API_KEY: z.string().optional(),
+  GROQ_API_KEY: z
+    .string()
+    .optional()
+    .transform((val) => (val ? val.trim().replace(/^["']|["']$/g, "") : val)),
   // Razorpay — payment gateway configuration
   RAZORPAY_KEY_ID: z.string().default("rzp_test_placeholder"),
   RAZORPAY_KEY_SECRET: z.string().default("secret_placeholder"),

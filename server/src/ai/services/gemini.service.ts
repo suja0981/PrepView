@@ -9,7 +9,21 @@ import { env } from "../../config/env";
 //   mixtral-8x7b-32768    → large context window
 const MODEL = "llama-3.1-8b-instant";
 
-const groq = new Groq({ apiKey: env.GROQ_API_KEY || "gsk_dummy_test_key" });
+import { AppError } from "../../shared/errors/app-error";
+
+function getGroqClient(): Groq {
+  const rawKey = env.GROQ_API_KEY || process.env.GROQ_API_KEY || "";
+  const apiKey = rawKey.trim().replace(/^["']|["']$/g, "");
+
+  if (!apiKey || apiKey === "gsk_dummy_test_key") {
+    throw new AppError(
+      "GROQ_API_KEY environment variable is missing on the server. Please set it in Render dashboard.",
+      500,
+    );
+  }
+
+  return new Groq({ apiKey });
+}
 
 /** Strip markdown code fences that LLMs sometimes wrap around JSON */
 function stripFences(text: string): string {
@@ -27,18 +41,31 @@ function stripFences(text: string): string {
  * Retries once if the response can't be parsed as JSON.
  */
 export async function callGemini(prompt: string): Promise<any> {
-  const response = await groq.chat.completions.create({
-    model: MODEL,
-    messages: [
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    // Enforce JSON output — Groq supports this natively for Llama 3 models
-    response_format: { type: "json_object" },
-    temperature: 0.7,
-  });
+  const client = getGroqClient();
+
+  let response;
+  try {
+    response = await client.chat.completions.create({
+      model: MODEL,
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      // Enforce JSON output — Groq supports this natively for Llama 3 models
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+    });
+  } catch (err: any) {
+    if (err?.status === 401 || err?.message?.includes("401") || err?.code === "invalid_api_key") {
+      throw new AppError(
+        "Invalid GROQ_API_KEY configured in environment variables. Get a free key at https://console.groq.com/keys and update Render settings.",
+        500,
+      );
+    }
+    throw err;
+  }
 
   const raw = response.choices[0]?.message?.content ?? "";
 
@@ -50,7 +77,7 @@ export async function callGemini(prompt: string): Promise<any> {
     return JSON.parse(stripFences(raw));
   } catch {
     // One retry — ask the model to return raw JSON only
-    const retry = await groq.chat.completions.create({
+    const retry = await client.chat.completions.create({
       model: MODEL,
       messages: [
         {

@@ -2,14 +2,13 @@ import Groq from "groq-sdk";
 import fs from "fs";
 import { env } from "../../config/env";
 
-const groq = new Groq({ apiKey: env.GROQ_API_KEY || "gsk_dummy_test_key" });
-
-/**
- * Transcribes an audio file using Groq's free whisper-large-v3-turbo model.
- */
 export async function transcribeAudioFile(filePath: string): Promise<string> {
+  const rawKey = env.GROQ_API_KEY || process.env.GROQ_API_KEY || "";
+  const apiKey = rawKey.trim().replace(/^["']|["']$/g, "");
+
+  const client = new Groq({ apiKey: apiKey || "gsk_dummy_test_key" });
   const fileStream = fs.createReadStream(filePath);
-  const response = await groq.audio.transcriptions.create({
+  const response = await client.audio.transcriptions.create({
     file: fileStream,
     model: "whisper-large-v3-turbo",
     response_format: "json",
