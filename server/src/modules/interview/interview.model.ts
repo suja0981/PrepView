@@ -15,10 +15,10 @@ const interviewSchema = new Schema(
       trim: true,
     },
 
-    // Extended: technical | behavioral | dsa | system_design | mixed
+    // Extended: technical | behavioral | system_design | mixed (dsa deferred until code editor added)
     type: {
       type: String,
-      enum: ["technical", "behavioral", "dsa", "system_design", "mixed"],
+      enum: ["technical", "behavioral", "system_design", "mixed"],
       default: "technical",
     },
 

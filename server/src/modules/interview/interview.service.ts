@@ -116,10 +116,15 @@ class InterviewService {
     return interviewRepository.findByUser(userId);
   }
 
-  async submitAnswer(interviewId: string, data: SubmitAnswerInput) {
+  async submitAnswer(interviewId: string, data: SubmitAnswerInput, userId: string) {
     // 1. Find interview
     const interview = await interviewRepository.findById(interviewId);
     if (!interview) throw new AppError("Interview not found.", 404);
+
+    // 1a. Ownership guard — only the interview owner can submit answers
+    if (interview.userId.toString() !== userId) {
+      throw new AppError("Access denied.", 403);
+    }
 
     // 2. Find current question
     const question = await questionRepository.findById(data.questionId);

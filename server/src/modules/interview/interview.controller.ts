@@ -56,7 +56,7 @@ export const submitAnswer = asyncHandler(
       throw new AppError("Invalid interview ID", 400);
     }
 
-    const answer = await interviewService.submitAnswer(id, req.body);
+    const answer = await interviewService.submitAnswer(id, req.body, req.user!.userId);
 
     res.status(201).json({
       success: true,

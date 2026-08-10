@@ -138,11 +138,14 @@ export const useInterviewSession = (interviewId: string) => {
 
     let finalAnswer = transcript;
 
-    // Optional Whisper fallback if browser STT is short but audio was recorded
-    if (audioBlob && finalAnswer.trim().split(/\s+/).length < MIN_SPOKEN_WORDS) {
+    // Whisper fallback: if audio was recorded and browser STT produced fewer than
+    // 20 words (possibly dropped words due to mic gaps), try Groq Whisper for
+    // a more accurate transcript. Whisper is better at technical terms.
+    const browserWordCount = finalAnswer.trim().split(/\s+/).length;
+    if (audioBlob && browserWordCount < 20) {
       try {
         const whisperRes = await transcribeAudio(audioBlob);
-        if (whisperRes.data?.transcript) {
+        if (whisperRes.data?.transcript && whisperRes.data.transcript.trim().length > finalAnswer.length) {
           finalAnswer = whisperRes.data.transcript;
         }
       } catch {

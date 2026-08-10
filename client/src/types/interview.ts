@@ -1,9 +1,9 @@
 export interface CreateInterviewRequest {
   role: string;
-  company?: string;
   techStacks?: string;
   difficulty: "easy" | "medium" | "hard";
-  type: "technical" | "behavioral";
+  // Matches server: interview.validation.ts CreateInterviewSchema
+  type: "technical" | "behavioral" | "system_design" | "mixed";
   mode: "voice" | "text";
 }
 
@@ -18,9 +18,12 @@ export interface Question {
 export interface Interview {
   _id: string;
   role: string;
-  company?: string;
+  type: string;
+  mode: string;
   difficulty: string;
   status: string;
+  techStacks?: string;
+  questionsAsked?: number;
 }
 
 export interface CreateInterviewResponse {
