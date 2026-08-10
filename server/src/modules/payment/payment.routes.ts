@@ -5,13 +5,8 @@ import { createCheckout, createPortal, stripeWebhook } from "./payment.controlle
 
 export const paymentRouter = Router();
 
-// ── Webhook (must be raw body, registered FIRST, no auth middleware) ──────────
-// Stripe sends raw binary — JSON parsing breaks the signature check.
-paymentRouter.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
-  stripeWebhook,
-);
+// ── Webhook (raw body mounted in app.ts, no auth middleware) ──────────────────
+paymentRouter.post("/webhook", stripeWebhook);
 
 // ── Protected routes (require login) ─────────────────────────────────────────
 paymentRouter.use(authenticate);
