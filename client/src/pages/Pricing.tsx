@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Check, Zap, Loader2, ArrowRight, Crown,
   Mic, Binary, Server, Infinity, BookOpen, ChevronDown, ShieldCheck, RefreshCw,
