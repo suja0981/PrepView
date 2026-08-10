@@ -29,9 +29,19 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://127.0.0.1:27017/prepview_test
+          JWT_SECRET: super-secret-jwt-test-key-12345
+          JWT_EXPIRES_IN: 7d
 
       - name: Test
         run: npm test
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://127.0.0.1:27017/prepview_test
+          JWT_SECRET: super-secret-jwt-test-key-12345
+          JWT_EXPIRES_IN: 7d
 
   client:
     name: Client — typecheck
