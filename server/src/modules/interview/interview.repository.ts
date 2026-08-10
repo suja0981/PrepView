@@ -6,7 +6,7 @@ class InterviewRepository {
     return InterviewModel.create({
       userId,
       ...Interview,
-      questionsAsked: 1,
+      questionsAsked: 0,
     });
   }
 

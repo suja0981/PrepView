@@ -1,4 +1,6 @@
 import { Router } from "express";
+import multer from "multer";
+import os from "os";
 
 import {
   createInterview,
@@ -34,9 +36,6 @@ interviewRouter.post("/:id/answer", answerRateLimit, validate(SubmitAnswerSchema
 interviewRouter.get("/:id/report", getInterviewReport);
 
 interviewRouter.get("/:id/details", getInterviewDetails);
-
-import multer from "multer";
-import os from "os";
 
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 10 * 1024 * 1024 } });
 
