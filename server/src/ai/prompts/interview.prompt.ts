@@ -28,6 +28,16 @@ function getDifficultyContext(difficulty: string): string {
   }
 }
 
+// ── No live-coding constraint — applies to ALL question types ────────────────
+// PrepView has no code editor. Every question MUST be answerable in spoken words
+// or typed prose. Never ask the candidate to write, implement, or code anything.
+const NO_CODE_CONSTRAINT = `CRITICAL CONSTRAINT — NO CODING QUESTIONS:
+- NEVER ask the candidate to write code, implement a function, or produce any code output.
+- NEVER use phrases like: "write a function", "implement", "code this", "write a program", "give me the code for", "return the output of", "what does this code print".
+- Instead, ask candidates to EXPLAIN concepts, DESCRIBE approaches, REASON through trade-offs, DISCUSS architecture decisions, or WALK THROUGH their debugging process verbally.
+- Example GOOD: "How does React's reconciliation algorithm work and why is it important?"
+- Example BAD: "Write a useEffect hook that fetches user data on mount."`;
+
 // ── Type-specific question strategy ──────────────────────────────────────────
 function getQuestionStrategy(type: string, role: string, techStacks?: string): string {
   const stack = techStacks ? ` Focus heavily on: ${techStacks}.` : "";
@@ -36,22 +46,26 @@ function getQuestionStrategy(type: string, role: string, techStacks?: string): s
     case "behavioral":
       return `Ask a behavioral question in STAR format (Situation, Task, Action, Result).
 Topics: teamwork, conflict resolution, deadlines, failure/learning, ownership, communication.
-Push for specific real examples — reject vague hypotheticals.${stack}`;
+Push for specific real examples — reject vague hypotheticals.${stack}
+${NO_CODE_CONSTRAINT}`;
 
     case "system_design":
       return `Ask a system design question appropriate for a ${role}.
 Follow this structure: scale requirements → high-level components → data model → API design → trade-offs → failure modes.
-Avoid questions that need a whiteboard — ask ones a candidate can reason through verbally.${stack}`;
+Avoid questions that need a whiteboard — ask ones a candidate can reason through verbally.${stack}
+${NO_CODE_CONSTRAINT}`;
 
     case "mixed":
       return `Alternate between technical concept, behavioral, and light system design questions.
-Keep each question clearly in one domain. Do not mix domains within a single question.${stack}`;
+Keep each question clearly in one domain. Do not mix domains within a single question.${stack}
+${NO_CODE_CONSTRAINT}`;
 
     default:
       // technical — the broadest type, covers all non-SDE domains too
       return `Ask a technical question that tests real on-the-job knowledge for a ${role}.${stack}
-Focus on: concepts, debugging scenarios, tool/framework internals, or real-world problem-solving.
-Avoid purely theoretical or academic questions.`;
+Focus on: how something works under the hood, when to choose one approach over another, how to debug a class of problem, or real production trade-offs.
+Do NOT ask the candidate to write code, implement anything, or produce code output — they must answer verbally or in prose.
+${NO_CODE_CONSTRAINT}`;
   }
 }
 
