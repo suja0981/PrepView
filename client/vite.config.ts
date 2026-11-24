@@ -12,13 +12,33 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // All requests starting with /api will be forwarded to localhost:4000
-      // This makes the browser think it's talking to the same origin,
-      // which allows httpOnly cookies to be set and sent correctly.
       "/api": {
         target: "http://localhost:4000",
         changeOrigin: true,
         secure: false,
+      },
+    },
+  },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react") || id.includes("react-dom") || id.includes("react-router")) {
+              return "vendor-react";
+            }
+            if (id.includes("recharts") || id.includes("d3-")) {
+              return "vendor-charts";
+            }
+            if (id.includes("framer-motion") || id.includes("lucide-react") || id.includes("sonner")) {
+              return "vendor-ui";
+            }
+            if (id.includes("@tanstack") || id.includes("axios")) {
+              return "vendor-query";
+            }
+          }
+        },
       },
     },
   },
