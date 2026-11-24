@@ -83,9 +83,10 @@ function FeatureShowcase() {
         {showcaseItems.map((_, i) => (
           <button
             key={i}
+            aria-label={`Show feature ${i + 1}`}
             onClick={() => setIndex(i)}
-            className={`h-1 rounded-full transition-all duration-300 ${
-              i === index ? "w-5 bg-primary" : "w-1.5 bg-border hover:bg-muted-foreground/30"
+            className={`h-1.5 w-4 rounded-full transition-colors duration-200 ${
+              i === index ? "bg-primary" : "bg-border hover:bg-muted-foreground/30"
             }`}
           />
         ))}

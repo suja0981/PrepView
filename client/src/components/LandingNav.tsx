@@ -30,7 +30,7 @@ export default function LandingNav() {
         <div className="flex items-center gap-1.5">
           <button
             onClick={toggleTheme}
-            aria-label="Toggle theme"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}

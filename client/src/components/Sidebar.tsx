@@ -73,7 +73,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
           {/* Main Section */}
           <div className="space-y-1">
-            <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 mb-2">
+            <p className="px-3 text-xs font-medium text-muted-foreground/70 mb-2">
               Platform
             </p>
             {mainNav.map(({ to, label, icon: Icon, badge }) => {
@@ -83,7 +83,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   key={to}
                   to={to}
                   onClick={() => setIsOpen(false)}
-                  className={`group relative flex items-center justify-between rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
+                  className={`group relative flex items-center justify-between rounded-xl px-3 py-2 text-[13px] font-medium transition-[background-color,color] duration-150 ${
                     active
                       ? "bg-primary/10 text-primary font-semibold"
                       : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
@@ -120,7 +120,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
           {/* Preferences / Account Section */}
           <div className="space-y-1">
-            <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 mb-2">
+            <p className="px-3 text-xs font-medium text-muted-foreground/70 mb-2">
               Account & Billing
             </p>
             {secondaryNav.map(({ to, label, icon: Icon }) => {
@@ -130,7 +130,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   key={to}
                   to={to}
                   onClick={() => setIsOpen(false)}
-                  className={`group relative flex items-center justify-between rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
+                  className={`group relative flex items-center justify-between rounded-xl px-3 py-2 text-[13px] font-medium transition-[background-color,color] duration-150 ${
                     active
                       ? "bg-primary/10 text-primary font-semibold"
                       : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
@@ -174,13 +174,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           ) : (
             <div className="relative rounded-xl border border-border/60 bg-secondary/40 p-3.5 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
                   <Sparkles size={11} /> Pro Features
                 </span>
-                <span className="text-[10px] text-muted-foreground font-mono">$9/mo</span>
+                <span className="text-[11px] text-muted-foreground font-mono">$9/mo</span>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Unlock Voice mode, System Design & unlimited practice.
+                Access Voice mode, System Design, and unlimited practice sessions.
               </p>
               <Link
                 to="/pricing"

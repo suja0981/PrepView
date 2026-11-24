@@ -29,9 +29,19 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         setDropdownOpen(false);
       }
     };
+    const keyHandler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        navigate("/interview/create");
+      }
+    };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+    document.addEventListener("keydown", keyHandler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("keydown", keyHandler);
+    };
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
@@ -50,21 +60,21 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const isPremium = user?.plan === "premium";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl transition-all">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
       <div className="flex h-14 items-center justify-between px-4 sm:px-6">
 
         {/* Left Section — Mobile Menu & Brand */}
         <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={onMenuClick}
-            aria-label="Toggle menu"
+            aria-label="Toggle navigation menu"
             className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
           >
             <Menu size={16} />
           </button>
 
           <Link to="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-[12px] font-bold text-primary-foreground shadow-sm shadow-primary/20 transition-transform group-hover:scale-105">
+            <div className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-[12px] font-bold text-primary-foreground shadow-sm shadow-primary/20 transition-transform duration-150 group-hover:scale-105">
               P
             </div>
             <span className="text-[15px] font-semibold tracking-tight text-foreground hidden sm:inline-block">
@@ -73,17 +83,18 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           </Link>
         </div>
 
-        {/* Center Section — Search / Command Trigger Mock */}
+        {/* Center Section — Quick Session Shortcut */}
         <div className="hidden md:flex items-center">
           <button
             onClick={() => navigate("/interview/create")}
-            className="flex h-8 w-64 items-center justify-between rounded-lg border border-border/60 bg-secondary/30 px-3 text-[12px] text-muted-foreground transition-colors hover:border-border hover:bg-secondary/60"
+            aria-label="Start new interview session"
+            className="flex h-8 w-64 items-center justify-between rounded-lg border border-border bg-secondary/40 px-3 text-[12px] text-muted-foreground transition-colors hover:border-border/80 hover:bg-secondary/70 hover:text-foreground"
           >
             <span className="flex items-center gap-2">
               <Search size={13} className="text-muted-foreground/70" />
-              <span>Search or start interview...</span>
+              <span>New practice session</span>
             </span>
-            <kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border border-border bg-card px-1 font-mono text-[10px] text-muted-foreground">
+            <kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border border-border bg-card px-1.5 font-mono text-[10px] text-muted-foreground">
               ⌘K
             </kbd>
           </button>
@@ -94,7 +105,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            aria-label="Toggle theme"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
@@ -103,7 +114,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           {/* Quick Action — New Interview */}
           <Link
             to="/interview/create"
-            className="hidden sm:flex items-center gap-1.5 h-8 rounded-lg bg-primary px-3 text-[13px] font-medium text-primary-foreground shadow-sm shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30"
+            className="hidden sm:flex items-center gap-1.5 h-8 rounded-lg bg-primary px-3 text-[13px] font-medium text-primary-foreground transition-[background-color,transform] duration-150 hover:bg-primary/90 active:scale-[0.985]"
           >
             <Plus size={14} />
             <span>New Session</span>
@@ -113,6 +124,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
+              aria-label="User account menu"
+              aria-expanded={dropdownOpen}
               className="flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-secondary/60"
             >
               <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[12px] font-bold text-primary border border-primary/20">
@@ -155,7 +168,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
                     {/* Plan Badge */}
                     <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Plan</span>
+                      <span className="text-xs font-medium text-muted-foreground">Plan</span>
                       {isPremium ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-500">
                           <Crown size={10} /> Pro Plan
@@ -190,17 +203,14 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                       </Link>
                     )}
 
-                    <button
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        toast.info("Account settings page coming soon");
-                      }}
+                    <Link
+                      to="/profile"
+                      onClick={() => setDropdownOpen(false)}
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                     >
                       <Settings size={14} />
-                      Settings
-                      <span className="ml-auto text-[10px] border border-border rounded-md px-1.5 py-0.5 text-muted-foreground/60">Soon</span>
-                    </button>
+                      Profile & Settings
+                    </Link>
 
                     <div className="my-1 h-px bg-border/50" />
 
