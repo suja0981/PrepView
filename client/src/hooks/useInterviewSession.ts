@@ -80,6 +80,9 @@ export const useInterviewSession = (interviewId: string) => {
           setStatus("completed");
           navigate(`/interview/${interviewId}/report`, { replace: true });
         } else {
+          if ((res.data.interview.questionsAsked || 0) > 0) {
+            setQuestionNumber(Math.min(10, (res.data.interview.questionsAsked || 0) + 1));
+          }
           setStatus("idle");
         }
       } catch (err: any) {

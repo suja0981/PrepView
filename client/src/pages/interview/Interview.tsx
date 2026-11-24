@@ -378,10 +378,24 @@ export default function Interview() {
 
       {/* Question card */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {/* Progress bar */}
+        <div className="w-full bg-secondary h-1">
+          <div
+            className="bg-primary h-full transition-all duration-300"
+            style={{ width: `${Math.min(100, Math.max(10, (questionNumber / 10) * 100))}%` }}
+          />
+        </div>
         <div className="flex items-center justify-between border-b border-border px-5 py-2.5">
-          <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
-            Question {questionNumber}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground font-mono">
+              Question {questionNumber} of 10
+            </span>
+            {currentQuestion?.isFollowUp && (
+              <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                Follow-up
+              </span>
+            )}
+          </div>
           <span className="text-[12px] text-muted-foreground capitalize">{currentQuestion?.topic}</span>
         </div>
         <div className="px-5 py-4">

@@ -1,4 +1,4 @@
-import { ClipboardList, CircleCheckBig, TrendingUp, Clock, Plus, FileSearch, Crown, Zap, ArrowRight } from "lucide-react";
+import { ClipboardList, CircleCheckBig, TrendingUp, Clock, Plus, FileSearch, Crown, Zap, ArrowRight, Target, Layers } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
@@ -38,9 +38,17 @@ export default function Dashboard() {
     ? Math.round(((stats.completedInterviews ?? 0) / stats.totalInterviews) * 100)
     : 0;
 
-  // Simple AI recommendation based on existing data
+  // Context-aware AI recommendation based on weak topics and score trends
   const getRecommendation = () => {
     if ((stats?.totalInterviews ?? 0) === 0) return null;
+    if (stats?.weakTopics && stats.weakTopics.length > 0) {
+      const topWeak = stats.weakTopics[0];
+      return {
+        text: `Frequent weak topic detected: "${topWeak.topic}". Practice a targeted session to solidify this area.`,
+        type: "Technical",
+        difficulty: avgScore < 60 ? "Easy" : "Medium",
+      };
+    }
     if (avgScore < 50) return { text: "Focus on fundamentals — try an Easy Technical interview next.", type: "Technical", difficulty: "Easy" };
     if (avgScore < 70) return { text: "Your scores are improving. Try a Medium Behavioral interview to sharpen communication.", type: "Behavioral", difficulty: "Medium" };
     return { text: "Strong performance. Challenge yourself with a Hard Technical or System Design round.", type: "Technical", difficulty: "Hard" };
@@ -186,6 +194,86 @@ export default function Dashboard() {
           <RecentInterviews interviews={stats?.recentInterviews ?? []} />
         </div>
       </div>
+
+      {/* Advanced Analytics Grid (Phase 6.1) */}
+      {(stats?.totalInterviews ?? 0) > 0 && (
+        <div className="grid gap-5 md:grid-cols-2">
+          {/* Weak Topics */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Target size={15} className="text-amber-500" />
+                <h3 className="text-sm font-medium text-foreground">Recurring Weak Topics</h3>
+              </div>
+              <span className="text-[11px] text-muted-foreground">Focus areas</span>
+            </div>
+
+            {stats?.weakTopics && stats.weakTopics.length > 0 ? (
+              <div className="space-y-3">
+                {stats.weakTopics.slice(0, 5).map((item) => (
+                  <div key={item.topic} className="space-y-1">
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="font-medium text-foreground truncate max-w-[240px]">{item.topic}</span>
+                      <span className="font-mono text-muted-foreground text-[11px]">{item.count} flag{item.count > 1 ? "s" : ""}</span>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-amber-500/80 h-full rounded-full"
+                        style={{ width: `${Math.min(100, Math.max(15, (item.count / (stats.weakTopics?.[0]?.count || 1)) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12.5px] text-muted-foreground/70 py-4 text-center">
+                No weak topics flagged yet. Solid work across your sessions!
+              </p>
+            )}
+          </div>
+
+          {/* Performance by Round Type */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Layers size={15} className="text-primary" />
+                <h3 className="text-sm font-medium text-foreground">Score by Interview Type</h3>
+              </div>
+              <span className="text-[11px] text-muted-foreground">Avg performance</span>
+            </div>
+
+            {stats?.scoreByType && stats.scoreByType.length > 0 ? (
+              <div className="space-y-3">
+                {stats.scoreByType.map((item) => {
+                  const pct = Math.round(item.avgScore);
+                  const color = pct >= 70 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500";
+                  return (
+                    <div key={item.type} className="space-y-1">
+                      <div className="flex items-center justify-between text-[12px]">
+                        <span className="font-medium capitalize text-foreground">{item.type.replace(/_/g, " ")}</span>
+                        <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                          <span className="font-bold text-foreground">{pct}%</span>
+                          <span className="text-muted-foreground/60">({item.count} session{item.count > 1 ? "s" : ""})</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${color}`}
+                          style={{ width: `${Math.min(100, Math.max(5, pct))}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-[12.5px] text-muted-foreground/70 py-4 text-center">
+                Complete more interview rounds to see score breakdowns by type.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Empty state — first-time user */}
       {(stats?.totalInterviews ?? 0) === 0 && (
