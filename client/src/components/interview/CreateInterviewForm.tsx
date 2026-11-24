@@ -1,170 +1,338 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, Mic, Type } from "lucide-react";
-
+import { useState } from "react";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-
+  Loader2, ArrowLeft, Sparkles, Mic, Code2, Users, Server, Shuffle,
+  Crown, Lock, ArrowRight, Zap, Clock, Volume2,
+} from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createInterviewSchema, type CreateInterviewSchema } from "@/schemas/interview.schema";
 import { useCreateInterview } from "@/hooks/useInterview";
+import { useAuthContext } from "@/context/AuthContext";
 
-const difficulties = ["easy", "medium", "hard"] as const;
-const types = ["technical", "behavioral"] as const;
-const modes = [
-  { value: "voice", label: "Voice", icon: Mic, desc: "Speak your answers aloud" },
-  { value: "text", label: "Text", icon: Type, desc: "Type your answers" },
+const ROLE_PRESETS = [
+  { label: "Frontend Dev",     role: "Frontend Software Engineer",     techStacks: "React, TypeScript, JavaScript, CSS, Browser APIs",       type: "technical" as const },
+  { label: "Backend Dev",      role: "Backend Software Engineer",      techStacks: "Node.js, REST APIs, SQL, MongoDB, Redis, Docker",         type: "technical" as const },
+  { label: "Fullstack Dev",    role: "Fullstack Software Engineer",    techStacks: "React, Node.js, TypeScript, PostgreSQL, REST APIs",       type: "technical" as const },
+  { label: "Mobile Dev",       role: "Mobile Software Engineer",       techStacks: "React Native, Swift, Kotlin, State Management, REST",     type: "technical" as const },
+  { label: "DevOps / SRE",     role: "DevOps / SRE Engineer",         techStacks: "Docker, Kubernetes, CI/CD, Terraform, Monitoring",        type: "technical" as const },
+  { label: "QA / Automation",  role: "QA Automation Engineer",        techStacks: "Selenium, Cypress, Playwright, Jest, Test Strategy",      type: "technical" as const },
+  { label: "Data Engineer",    role: "Data Engineer",                  techStacks: "Python, Spark, Airflow, Kafka, BigQuery, Snowflake",      type: "technical" as const },
+  { label: "Data Analyst",     role: "Data Analyst",                   techStacks: "SQL, Python, Tableau, A/B Testing, Data Modelling",      type: "technical" as const },
+  { label: "AI / ML Engineer", role: "ML Engineer",                    techStacks: "Python, PyTorch, scikit-learn, MLOps, Model Deployment", type: "technical" as const },
+  { label: "System Design",    role: "Software Engineer",              techStacks: "",                                                        type: "system_design" as const },
+  { label: "Behavioral",       role: "Software Engineer",              techStacks: "",                                                        type: "behavioral" as const },
+  { label: "Custom",           role: "",                               techStacks: "",                                                        type: "technical" as const },
+];
+
+const DIFFICULTIES = [
+  { value: "easy",   label: "Easy",   desc: "0 to 1 yr, fundamentals" },
+  { value: "medium", label: "Medium", desc: "1 to 3 yr, industry standard" },
+  { value: "hard",   label: "Hard",   desc: "4+ yr, senior level" },
 ] as const;
 
-function ToggleGroup<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: readonly { value: T; label: string }[];
-  value: T;
-  onChange: (v: T) => void;
-}) {
-  return (
-    <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          onClick={() => onChange(o.value)}
-          className={`rounded-md border px-3 py-2 text-[13px] font-medium capitalize transition-colors ${
-            value === o.value
-              ? "border-primary bg-primary/10 text-foreground"
-              : "border-border text-muted-foreground hover:bg-secondary"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+const TYPES = [
+  { value: "technical",     label: "Technical",     desc: "Concepts & real-world problems", icon: Code2  },
+  { value: "behavioral",    label: "Behavioral",    desc: "STAR format & soft skills",      icon: Users  },
+  { value: "system_design", label: "System Design", desc: "Architecture & trade-offs",      icon: Server },
+  { value: "mixed",         label: "Mixed",         desc: "All domains combined",            icon: Shuffle },
+] as const;
 
-export default function CreateInterviewForm() {
+const PREMIUM_TYPES = ["system_design"];
+const PREMIUM_DIFFICULTIES = ["hard"];
+
+export default function CreateInterviewForm({ mode }: { mode: "text" | "voice" }) {
   const navigate = useNavigate();
   const mutation = useCreateInterview();
+  const { user } = useAuthContext();
+  const isPremium = user?.plan === "premium";
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const isVoice = mode === "voice";
 
   const form = useForm<CreateInterviewSchema>({
     resolver: zodResolver(createInterviewSchema),
-    defaultValues: { role: "", company: "", difficulty: "medium", type: "technical", mode: "voice" },
+    defaultValues: {
+      role: "",
+      company: "",
+      techStacks: "",
+      difficulty: "medium",
+      type: "technical",
+      mode,
+    },
   });
+
+  function applyPreset(preset: typeof ROLE_PRESETS[number]) {
+    setSelectedPreset(preset.label);
+    form.setValue("role", preset.role);
+    form.setValue("techStacks", preset.techStacks);
+    form.setValue("type", preset.type);
+  }
 
   async function onSubmit(values: CreateInterviewSchema) {
     try {
-      const res = await mutation.mutateAsync(values);
-      toast.success("Interview created");
+      const res = await mutation.mutateAsync({ ...values, mode });
+      toast.success(isVoice ? "Voice interview session created" : "Interview session created");
       navigate(`/interview/${res.data.interview._id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.error?.message ?? "Failed to create interview");
     }
   }
 
+  const selectedDifficulty = form.watch("difficulty");
+  const selectedType = form.watch("type");
+
+  if (isVoice && !isPremium) {
+    return (
+      <div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-6">
+        <div className="mx-auto max-w-sm text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/20">
+              <Crown size={28} className="text-amber-500" />
+            </div>
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">Voice Interview is Premium</h1>
+            <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
+              Voice interviews, System Design, and unlimited sessions are available on the Premium plan for $9/month.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Button asChild className="gap-1.5">
+              <Link to="/pricing"><Crown size={13} /> View Premium plans <ArrowRight size={13} /></Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/interview/create"><ArrowLeft size={13} className="mr-1" /> Back to hub</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto max-w-lg px-4 sm:px-6 py-8 sm:py-10 space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">New interview</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Configure your session. The AI tailors questions to your inputs.
+    <div className="mx-auto max-w-2xl px-4 sm:px-6 py-10 sm:py-14">
+      <Link
+        to="/interview/create"
+        className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors mb-8"
+      >
+        <ArrowLeft size={13} /> Back to Practice hub
+      </Link>
+
+      <div className="mb-8">
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-[11px] font-medium text-muted-foreground mb-3">
+          {isVoice ? <Mic size={11} className="text-primary" /> : <Sparkles size={11} className="text-primary" />}
+          {isVoice ? "Voice Interview" : "Text Interview"}
+        </div>
+        <h1 className="text-2xl font-semibold tracking-tight">Configure your session</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          {isVoice
+            ? "Speak your answers aloud. AI listens, evaluates, and gives targeted feedback in real time."
+            : "Adaptive AI questions based on your role and tech stack. Weak answers trigger targeted follow-ups automatically."}
         </p>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      {isVoice && (
+        <div className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 px-4 py-3.5 mb-6">
+          <Volume2 size={15} className="text-primary shrink-0 mt-0.5" />
+          <p className="text-[13px] text-muted-foreground leading-relaxed">
+            <span className="text-foreground font-medium">Microphone required.</span>{" "}
+            Allow microphone access when prompted. Use Chrome or Edge for best results.
+          </p>
+        </div>
+      )}
 
-            {/* Role */}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+          {/* Role Presets */}
+          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground">Quick Start</p>
+              <p className="text-[12px] text-muted-foreground mt-0.5">Pick a preset or configure manually below.</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {ROLE_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => applyPreset(preset)}
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors text-[12.5px] font-medium ${
+                    selectedPreset === preset.label
+                      ? "border-primary bg-primary/8 text-foreground ring-1 ring-primary/20"
+                      : "border-border text-muted-foreground hover:border-border/60 hover:bg-secondary/50 hover:text-foreground"
+                  }`}
+                >
+                  <Zap size={11} className={selectedPreset === preset.label ? "text-primary" : "text-muted-foreground/50"} />
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Role & Tech Stacks */}
+          <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+            <p className="text-xs font-semibold text-muted-foreground">Target Role</p>
+
             <FormField control={form.control} name="role" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[13px] text-muted-foreground">
+                <FormLabel className="text-sm font-medium text-foreground">
                   Role <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Frontend Developer" className="h-9 bg-transparent text-sm" {...field} />
+                  <Input placeholder="e.g. Backend Software Engineer" className="h-10 bg-background text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
-            {/* Company */}
             <FormField control={form.control} name="company" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[13px] text-muted-foreground">Company</FormLabel>
+                <FormLabel className="text-sm font-medium text-foreground">
+                  Target Company <span className="text-muted-foreground font-normal">(optional)</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Google (optional)" className="h-9 bg-transparent text-sm" {...field} />
+                  <Input placeholder="e.g. Google, Amazon, Stripe" className="h-10 bg-background text-sm" {...field} />
                 </FormControl>
-                <FormMessage />
+                <p className="text-[12px] text-muted-foreground">Tailors questions to this company's known engineering culture.</p>
               </FormItem>
             )} />
 
-            {/* Difficulty */}
-            <FormField control={form.control} name="difficulty" render={({ field }) => (
+            <FormField control={form.control} name="techStacks" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[13px] text-muted-foreground">Difficulty</FormLabel>
-                <ToggleGroup options={difficulties.map(d => ({ value: d, label: d }))} value={field.value} onChange={field.onChange} />
-                <FormMessage />
+                <FormLabel className="text-sm font-medium text-foreground">
+                  Tech Stack <span className="text-muted-foreground font-normal">(optional)</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. React, Node.js, PostgreSQL" className="h-10 bg-background text-sm" {...field} />
+                </FormControl>
+                <p className="text-[12px] text-muted-foreground">Comma-separated. Questions will focus on these technologies.</p>
               </FormItem>
             )} />
+          </div>
 
-            {/* Type */}
+          {/* Interview Type */}
+          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground">Interview Type</p>
+              <p className="text-[12px] text-muted-foreground mt-0.5">Weak answers trigger a targeted follow-up automatically.</p>
+            </div>
             <FormField control={form.control} name="type" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[13px] text-muted-foreground">Type</FormLabel>
-                <ToggleGroup options={types.map(t => ({ value: t, label: t }))} value={field.value} onChange={field.onChange} />
-                <FormMessage />
-              </FormItem>
-            )} />
-
-            {/* Mode */}
-            <FormField control={form.control} name="mode" render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[13px] text-muted-foreground">Format</FormLabel>
-                <div className="grid grid-cols-2 gap-2">
-                  {modes.map(({ value, label, icon: Icon, desc }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => field.onChange(value)}
-                      className={`flex flex-col items-start gap-1 rounded-md border px-3 py-3 text-left transition-colors ${
-                        field.value === value
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "border-border text-muted-foreground hover:bg-secondary"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Icon size={13} />
-                        <span className="text-[13px] font-medium">{label}</span>
-                      </div>
-                      <span className="text-[11px] opacity-70">{desc}</span>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {TYPES.map(({ value, label, desc, icon: Icon }) => {
+                    const isLocked = !isVoice && !isPremium && PREMIUM_TYPES.includes(value);
+                    return isLocked ? (
+                      <Link
+                        key={value}
+                        to="/pricing"
+                        className="flex flex-col items-start gap-1.5 rounded-lg border border-border/50 px-4 py-3 text-left opacity-60 hover:opacity-80 transition-opacity relative"
+                      >
+                        <Icon size={15} className="text-muted-foreground/50" />
+                        <span className="text-[13px] font-semibold leading-tight text-muted-foreground">{label}</span>
+                        <span className="text-[11px] text-muted-foreground/60 leading-tight">{desc}</span>
+                        <span className="absolute top-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-600 dark:text-amber-400">
+                          <Crown size={8} /> Pro
+                        </span>
+                      </Link>
+                    ) : (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => field.onChange(value)}
+                        className={`flex flex-col items-start gap-1.5 rounded-lg border px-4 py-3 text-left transition-colors ${
+                          selectedType === value
+                            ? "border-primary bg-primary/8 ring-1 ring-primary/20"
+                            : "border-border hover:border-border/60 hover:bg-secondary/50"
+                        }`}
+                      >
+                        <Icon size={15} className={selectedType === value ? "text-primary" : "text-muted-foreground"} />
+                        <span className={`text-[13px] font-semibold leading-tight ${selectedType === value ? "text-foreground" : "text-muted-foreground"}`}>
+                          {label}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground leading-tight">{desc}</span>
+                      </button>
+                    );
+                  })}
                 </div>
                 <FormMessage />
               </FormItem>
             )} />
+          </div>
 
-            <Button type="submit" disabled={mutation.isPending} className="w-full h-9 text-[13px] font-medium">
-              {mutation.isPending ? (
-                <><Loader2 size={14} className="mr-1.5 animate-spin" /> Generating...</>
-              ) : "Start interview"}
+          {/* Difficulty */}
+          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+            <p className="text-xs font-semibold text-muted-foreground">Difficulty</p>
+            <FormField control={form.control} name="difficulty" render={({ field }) => (
+              <FormItem>
+                <div className="grid grid-cols-3 gap-3">
+                  {DIFFICULTIES.map(({ value, label, desc }) => {
+                    const isLocked = !isVoice && !isPremium && PREMIUM_DIFFICULTIES.includes(value);
+                    return isLocked ? (
+                      <Link
+                        key={value}
+                        to="/pricing"
+                        className="flex flex-col items-start gap-0.5 rounded-lg border border-border/50 px-4 py-3 text-left opacity-60 hover:opacity-80 transition-opacity relative"
+                      >
+                        <span className="text-[13px] font-semibold text-muted-foreground flex items-center gap-1">
+                          {label} <Lock size={10} className="text-amber-500" />
+                        </span>
+                        <span className="text-[11px] text-muted-foreground/60">{desc}</span>
+                        <span className="absolute top-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-600 dark:text-amber-400">
+                          <Crown size={8} /> Pro
+                        </span>
+                      </Link>
+                    ) : (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => field.onChange(value)}
+                        className={`flex flex-col items-start gap-0.5 rounded-lg border px-4 py-3 text-left transition-colors ${
+                          selectedDifficulty === value
+                            ? "border-primary bg-primary/8 ring-1 ring-primary/20"
+                            : "border-border hover:border-border/60 hover:bg-secondary/50"
+                        }`}
+                      >
+                        <span className={`text-[13px] font-semibold ${selectedDifficulty === value ? "text-foreground" : "text-muted-foreground"}`}>
+                          {label}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">{desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
+
+          {/* Summary + Submit */}
+          <div className="rounded-xl border border-border bg-secondary/30 p-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
+              <Clock size={13} />
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-foreground font-medium capitalize">
+                  {TYPES.find(t => t.value === selectedType)?.label}
+                </span>
+                <span className="h-3 w-px bg-border" />
+                <span className="capitalize">{selectedDifficulty}</span>
+                <span className="h-3 w-px bg-border" />
+                <span>{isVoice ? "Voice" : "Text"} mode (7 to 12 questions)</span>
+              </div>
+            </div>
+            <Button type="submit" disabled={mutation.isPending} className="shrink-0 h-9 px-5 text-[13px] font-medium">
+              {mutation.isPending
+                ? <><Loader2 size={14} className="mr-1.5 animate-spin" /> Generating...</>
+                : "Start session"
+              }
             </Button>
+          </div>
 
-          </form>
-        </Form>
-      </div>
+        </form>
+      </Form>
     </div>
   );
 }

@@ -1,12 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useCallback, useEffect } from "react";
-import {
-  ArrowLeft, ArrowRight, Loader2, Zap,
-  CheckCircle2, AlertCircle, ChevronRight,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { submitAnswer } from "@/api/interview.api";
 import { useTimer } from "@/hooks/useTimer";
+import AnswerFeedbackPanel from "@/components/interview/AnswerFeedbackPanel";
 
 interface Props {
   id: string;
@@ -34,87 +32,6 @@ interface EvaluationData {
   communication: number;
   feedback: string;
   weakTopics: string[];
-}
-
-// Compact score badge used in the feedback panel
-function ScoreBadge({ label, value }: { label: string; value: number }) {
-  const pct = Math.round(value * 10);
-  const color = pct >= 70 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-red-500";
-  return (
-    <div className="flex flex-col items-center gap-0.5">
-      <span className={`text-base font-bold tabular-nums ${color}`}>{pct}%</span>
-      <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
-    </div>
-  );
-}
-
-// ── Interim feedback panel shown after submitting an answer ───────────────────
-function FeedbackPanel({
-  evaluation,
-  questionNumber,
-  isFollowUp,
-  onContinue,
-}: {
-  evaluation: EvaluationData;
-  questionNumber: number;
-  isFollowUp: boolean;
-  onContinue: () => void;
-}) {
-  const overallPct = Math.round(evaluation.overallScore * 10);
-  const isStrong = overallPct >= 70;
-  const isMid = overallPct >= 50;
-
-  return (
-    <div className="mx-auto max-w-xl px-4 sm:px-6 py-8 sm:py-10 space-y-5">
-      {/* Header */}
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">
-          {isStrong ? "Good answer" : isMid ? "Decent answer" : "Needs improvement"}
-        </h2>
-        <p className="text-xs font-medium text-muted-foreground mt-0.5">
-          Answer {questionNumber} evaluated
-        </p>
-      </div>
-
-      {/* Score strip */}
-      <div className="rounded-xl border border-border bg-card p-4 flex items-center justify-around gap-4">
-        <ScoreBadge label="Overall" value={evaluation.overallScore} />
-        <div className="w-px h-8 bg-border" />
-        <ScoreBadge label="Technical" value={evaluation.technicalAccuracy} />
-        <div className="w-px h-8 bg-border" />
-        <ScoreBadge label="Reasoning" value={evaluation.reasoning} />
-        <div className="w-px h-8 bg-border" />
-        <ScoreBadge label="Communication" value={evaluation.communication} />
-      </div>
-
-      {/* AI feedback text */}
-      <div className="rounded-xl border border-border bg-card p-5 space-y-2">
-        <div className="flex items-center gap-2">
-          {isStrong
-            ? <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
-            : <AlertCircle size={14} className="text-amber-500 shrink-0" />
-          }
-          <p className="text-xs font-semibold text-foreground">AI Feedback</p>
-        </div>
-        <p className="text-[13px] text-muted-foreground leading-relaxed">{evaluation.feedback}</p>
-      </div>
-
-      {/* Follow-up warning */}
-      {isFollowUp && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/8 px-4 py-2.5">
-          <Zap size={13} className="text-amber-500 shrink-0" />
-          <p className="text-[12px] text-amber-600 dark:text-amber-400">
-            The next question will probe this same topic more deeply.
-          </p>
-        </div>
-      )}
-
-      {/* Continue button */}
-      <Button onClick={onContinue} className="w-full h-9 text-[13px] font-medium gap-1.5">
-        Next question <ChevronRight size={13} />
-      </Button>
-    </div>
-  );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -245,7 +162,7 @@ export default function TextInterview({ id, interview, currentQuestion, onQuesti
   // ── Feedback panel (between questions) ───────────────────────────────────────
   if (pendingEvaluation) {
     return (
-      <FeedbackPanel
+      <AnswerFeedbackPanel
         evaluation={pendingEvaluation}
         questionNumber={questionNumber}
         isFollowUp={pendingIsFollowUp}

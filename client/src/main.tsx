@@ -6,10 +6,14 @@ import { Toaster } from "sonner";
 
 import { router } from "@/routes";
 import { queryClient } from "@/lib/queryClient";
+import { api } from "@/api/axios";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 
 import "./index.css";
+
+// Wake up backend on initial load to reduce cold-start latency
+api.get("/health").catch(() => {});
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
