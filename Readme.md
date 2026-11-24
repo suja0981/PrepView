@@ -38,12 +38,12 @@
 - Text-to-Speech (TTS) toggle — AI reads questions aloud hands-free
 - Feedback panel between each question
 
-**Premium Subscription (Stripe)**
+**Premium Subscription (Razorpay)**
 
 - Free plan: 3 text interviews/month, 10 resume analyses/day, technical & behavioral types, easy/medium difficulty
-- Premium plan ($9/month): Unlimited interviews, voice mode, DSA, System Design, hard difficulty, unlimited resume analyses
-- Stripe Checkout + Customer Portal for subscription management
-- Webhook-driven plan activation (checkout.session.completed, invoice renewal, cancellation)
+- Premium plan ($9 / ₹799/month): Unlimited interviews, voice mode, DSA, System Design, hard difficulty, unlimited resume analyses
+- Razorpay Checkout modal for subscription upgrade
+- Webhook-driven plan activation with HMAC-SHA256 signature verification
 
 **Dashboard**
 
