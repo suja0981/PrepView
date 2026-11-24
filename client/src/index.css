@@ -1,3 +1,6 @@
+/* Hallmark · built: PrepView · redesign: full · scope: app · genre: modern-minimal · theme: Precision Obsidian · hero: Settled (/) */
+/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4 · weakest: E, consolidated all color and font literals into :root tokens */
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -6,65 +9,41 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   PrepView Design System v2.0
-   ───────────────────────────────────────────────────────────────────────────
-   Principles: Premium · Minimal · Confident · High-density · Low-noise
-   Aesthetic:  Soft depth, subtle motion, no unnecessary decoration
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─── Light theme ──────────────────────────────────────────────────────────
-   Warm paper tones. Cards feel lifted with very soft borders.
-   Text hierarchy: foreground → muted-foreground → muted-foreground/50.
-   ──────────────────────────────────────────────────────────────────────── */
+/* ─── Light & Master Tokens ──────────────────────────────────────────────── */
 :root {
-  /* Canvas */
+  /* Fonts */
+  --font-ui: "Geist Variable", -apple-system, system-ui, sans-serif;
+  --font-code: "Geist Mono Variable", "Cascadia Code", ui-monospace, monospace;
+
+  /* Light Mode Semantic Colors */
   --background: oklch(0.975 0.002 270);
   --foreground: oklch(0.12 0.005 270);
-
-  /* Surfaces */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.12 0.005 270);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.12 0.005 270);
-
-  /* Brand — Electric Blue #4F7CFF */
   --primary: oklch(0.58 0.17 265);
   --primary-foreground: oklch(0.99 0 0);
-
-  /* Neutral surfaces */
   --secondary: oklch(0.955 0.003 270);
   --secondary-foreground: oklch(0.22 0.005 270);
   --muted: oklch(0.955 0.003 270);
   --muted-foreground: oklch(0.45 0.01 270);
-
-  /* Accent — same as secondary in light mode for restraint */
   --accent: oklch(0.955 0.003 270);
   --accent-foreground: oklch(0.12 0.005 270);
-
-  /* Semantic */
   --destructive: oklch(0.55 0.22 25);
   --warning: oklch(0.72 0.15 75);
   --success: oklch(0.65 0.17 155);
-
-  /* Edges */
   --border: oklch(0 0 0 / 7%);
   --input: oklch(0 0 0 / 7%);
   --ring: oklch(0.58 0.17 265 / 30%);
   --radius: 0.5rem;
-
-  /* Brand extended — for badges, accents, feature highlights */
   --brand-violet: oklch(0.55 0.2 290);
   --brand-mint: oklch(0.78 0.12 170);
-
-  /* Charts */
   --chart-1: oklch(0.58 0.17 265);
   --chart-2: oklch(0.55 0.16 160);
   --chart-3: oklch(0.55 0.16 140);
   --chart-4: oklch(0.60 0.17 45);
   --chart-5: oklch(0.55 0.16 320);
-
-  /* Sidebar */
   --sidebar: oklch(0.96 0.002 270);
   --sidebar-foreground: oklch(0.12 0.005 270);
   --sidebar-primary: oklch(0.58 0.17 265);
@@ -74,69 +53,67 @@
   --sidebar-border: oklch(0 0 0 / 7%);
   --sidebar-ring: oklch(0.58 0.17 265 / 30%);
 
+  /* Dark Mode Palette Tokens */
+  --dark-bg: oklch(0.085 0.008 265);
+  --dark-fg: oklch(0.96 0.005 260);
+  --dark-card: oklch(0.125 0.009 265);
+  --dark-primary: oklch(0.64 0.17 265);
+  --dark-primary-fg: oklch(0.99 0 0);
+  --dark-secondary: oklch(0.165 0.01 265);
+  --dark-secondary-fg: oklch(0.90 0.005 260);
+  --dark-muted-fg: oklch(0.68 0.012 260);
+  --dark-destructive: oklch(0.60 0.20 25);
+  --dark-warning: oklch(0.74 0.16 75);
+  --dark-success: oklch(0.68 0.17 155);
+  --dark-border: oklch(1 0 0 / 8%);
+  --dark-input: oklch(1 0 0 / 10%);
+  --dark-ring: oklch(0.64 0.17 265 / 45%);
+  --dark-violet: oklch(0.65 0.18 290);
+  --dark-sidebar: oklch(0.10 0.008 265);
+
+  /* Print Tokens */
+  --print-paper: oklch(0.99 0.002 270);
+  --print-ink: oklch(0.15 0.005 270);
+
   color-scheme: light;
 }
 
-/* ─── Dark theme ───────────────────────────────────────────────────────────
-   True near-black canvas (#0B0B0C) with layered card surfaces.
-   Avoid pure black — use very dark blues for depth.
-   Borders are soft white overlays at 6-8%.
-   ──────────────────────────────────────────────────────────────────────── */
+/* ─── Dark Theme Mapping ─────────────────────────────────────────────────── */
 .dark {
-  /* Canvas — void-dark, not pure black */
-  --background: oklch(0.09 0.006 270);
-  --foreground: oklch(0.93 0.005 270);
-
-  /* Surfaces — layered elevation */
-  --card: oklch(0.125 0.006 270);
-  --card-foreground: oklch(0.93 0.005 270);
-  --popover: oklch(0.125 0.006 270);
-  --popover-foreground: oklch(0.93 0.005 270);
-
-  /* Brand — slightly brighter in dark mode for readability */
-  --primary: oklch(0.67 0.16 265);
-  --primary-foreground: oklch(0.98 0 0);
-
-  /* Neutral surfaces — dark elevation layers */
-  --secondary: oklch(0.155 0.006 270);
-  --secondary-foreground: oklch(0.83 0.005 270);
-  --muted: oklch(0.155 0.006 270);
-  --muted-foreground: oklch(0.52 0.01 270);
-
-  /* Accent */
-  --accent: oklch(0.155 0.006 270);
-  --accent-foreground: oklch(0.93 0.005 270);
-
-  /* Semantic */
-  --destructive: oklch(0.60 0.20 25);
-  --warning: oklch(0.72 0.15 75);
-  --success: oklch(0.65 0.17 155);
-
-  /* Edges — white overlay borders */
-  --border: oklch(1 0 0 / 6%);
-  --input: oklch(1 0 0 / 6%);
-  --ring: oklch(0.67 0.16 265 / 35%);
-
-  /* Brand extended */
-  --brand-violet: oklch(0.65 0.18 290);
-  --brand-mint: oklch(0.78 0.12 170);
-
-  /* Charts */
-  --chart-1: oklch(0.67 0.16 265);
-  --chart-2: oklch(0.65 0.15 160);
-  --chart-3: oklch(0.65 0.15 140);
-  --chart-4: oklch(0.65 0.15 45);
-  --chart-5: oklch(0.65 0.15 320);
-
-  /* Sidebar */
-  --sidebar: oklch(0.105 0.006 270);
-  --sidebar-foreground: oklch(0.93 0.005 270);
-  --sidebar-primary: oklch(0.67 0.16 265);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.155 0.006 270);
-  --sidebar-accent-foreground: oklch(0.93 0.005 270);
-  --sidebar-border: oklch(1 0 0 / 6%);
-  --sidebar-ring: oklch(0.67 0.16 265 / 35%);
+  --background: var(--dark-bg);
+  --foreground: var(--dark-fg);
+  --card: var(--dark-card);
+  --card-foreground: var(--dark-fg);
+  --popover: var(--dark-card);
+  --popover-foreground: var(--dark-fg);
+  --primary: var(--dark-primary);
+  --primary-foreground: var(--dark-primary-fg);
+  --secondary: var(--dark-secondary);
+  --secondary-foreground: var(--dark-secondary-fg);
+  --muted: var(--dark-secondary);
+  --muted-foreground: var(--dark-muted-fg);
+  --accent: var(--dark-secondary);
+  --accent-foreground: var(--dark-fg);
+  --destructive: var(--dark-destructive);
+  --warning: var(--dark-warning);
+  --success: var(--dark-success);
+  --border: var(--dark-border);
+  --input: var(--dark-input);
+  --ring: var(--dark-ring);
+  --brand-violet: var(--dark-violet);
+  --chart-1: var(--dark-primary);
+  --chart-2: var(--dark-success);
+  --chart-3: var(--dark-warning);
+  --chart-4: var(--dark-destructive);
+  --chart-5: var(--dark-violet);
+  --sidebar: var(--dark-sidebar);
+  --sidebar-foreground: var(--dark-fg);
+  --sidebar-primary: var(--dark-primary);
+  --sidebar-primary-foreground: var(--dark-primary-fg);
+  --sidebar-accent: var(--dark-secondary);
+  --sidebar-accent-foreground: var(--dark-fg);
+  --sidebar-border: var(--dark-border);
+  --sidebar-ring: var(--dark-ring);
 
   color-scheme: dark;
 }
@@ -148,32 +125,21 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
+  scrollbar-color: var(--muted-foreground) transparent;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: clip;
   background: var(--background);
-  font-family: "Geist Variable", -apple-system, system-ui, sans-serif;
+  font-family: var(--font-ui);
   line-height: 1.5;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Subtle texture — prevents flat/sterile feel without decoration */
-  background-image: radial-gradient(
-    circle at 50% 0%,
-    oklch(0.58 0.04 265 / 3%) 0%,
-    transparent 60%
-  );
-}
-
-.dark body {
-  background-image: radial-gradient(
-    circle at 50% 0%,
-    oklch(0.58 0.04 265 / 5%) 0%,
-    transparent 50%
-  );
 }
 
 #root {
@@ -182,9 +148,9 @@ body {
 
 /* ─── Tailwind theme map ───────────────────────────────────────────────── */
 @theme inline {
-  --font-sans: "Geist Variable", -apple-system, system-ui, sans-serif;
-  --font-heading: "Geist Variable", -apple-system, system-ui, sans-serif;
-  --font-mono: "Geist Mono Variable", "Cascadia Code", ui-monospace, monospace;
+  --font-sans: var(--font-ui);
+  --font-heading: var(--font-ui);
+  --font-mono: var(--font-code);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -216,12 +182,10 @@ body {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* Brand extended */
   --color-brand-violet: var(--brand-violet);
   --color-brand-mint: var(--brand-mint);
   --color-warning: var(--warning);
   --color-success: var(--success);
-  /* Radii */
   --radius-sm: calc(var(--radius) * 0.75);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) * 1.5);
@@ -231,13 +195,39 @@ body {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+    caret-color: var(--primary);
   }
   html {
     @apply font-sans;
+  }
+  h1, h2, h3, h4 {
+    overflow-wrap: break-word;
+    min-width: 0;
+    text-wrap: balance;
+  }
+  button, a, [role="button"] {
+    cursor: pointer;
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -251,8 +241,8 @@ body {
   }
 
   body {
-    background: white !important;
-    color: black !important;
+    background: var(--print-paper) !important;
+    color: var(--print-ink) !important;
     font-size: 12px;
   }
 

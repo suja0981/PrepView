@@ -130,3 +130,7 @@ public
 
 # Docker
 .dockerignore
+
+# AI Skills & Hallmark Audit Cache
+.agents/
+.hallmark/
