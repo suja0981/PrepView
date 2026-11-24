@@ -1,4 +1,4 @@
-import { callGemini } from "../../ai/services/gemini.service";
+import { callGroqFast } from "../../ai/services/llm.service";
 import { buildQuestionPrompt } from "../../ai/prompts/interview.prompt";
 import { answerRepository } from "../answer";
 import { questionRepository } from "../question";
@@ -13,6 +13,8 @@ import { evaluationRepository } from "../evaluation/evaluation.repository";
 import { reportRepository } from "../report/report.repository";
 import { User } from "../user/user.model";
 import { InterviewModel } from "./interview.model";
+import { retrieveQuestions } from "../../ai/services/question-retrieval.service";
+import { questionBankRepository } from "../question-bank/question-bank.repository";
 
 // ── Plan limits ───────────────────────────────────────────────────────────────
 const FREE_MONTHLY_TEXT_LIMIT = 3;
@@ -78,16 +80,24 @@ class InterviewService {
 
     const interview = await interviewRepository.create(userId, data);
 
+    const candidateQuestions = await retrieveQuestions({
+      type: data.type,
+      difficulty: data.difficulty,
+      role: data.role,
+      techStacks: data.techStacks ? [data.techStacks] : undefined,
+    });
 
     const prompt = buildQuestionPrompt({
       role: data.role,
       type: data.type,
       difficulty: data.difficulty,
       techStacks: data.techStacks,
+      company: data.company,
       mode: data.mode,
+      candidateQuestions,
     });
 
-    const questionData = await callGemini(prompt);
+    const questionData = await callGroqFast(prompt);
 
     const question = await questionRepository.create({
       interviewId: interview.id,
@@ -114,6 +124,13 @@ class InterviewService {
 
   async getUserInterviews(userId: string) {
     return interviewRepository.findByUser(userId);
+  }
+
+  async getUserInterviewsPaginated(
+    userId: string,
+    options: { page: number; limit: number; status?: string; type?: string; difficulty?: string }
+  ) {
+    return interviewRepository.findByUserPaginated(userId, options);
   }
 
   async submitAnswer(interviewId: string, data: SubmitAnswerInput, userId: string) {
@@ -199,6 +216,30 @@ class InterviewService {
       const savedReport = await reportRepository.create({ interviewId, ...report });
       await interviewRepository.markCompleted(interviewId);
 
+      // ── Self-growing Question Bank (Phase 5.5) ─────────────────────────────
+      // Store session questions that yielded high-quality evaluations into QuestionBank
+      (async () => {
+        try {
+          for (const q of questions) {
+            const a = answerMap.get(q.id.toString());
+            const e = a ? evaluationMap.get(a.id.toString()) : undefined;
+            if (e && e.overallScore >= 6) {
+              await questionBankRepository.upsertGeneratedQuestion({
+                question: q.question,
+                topic: q.topic,
+                type: interview.type,
+                difficulty: interview.difficulty,
+                roles: [interview.role],
+                techStacks: interview.techStacks ? [interview.techStacks] : [],
+                avgEvalScore: e.overallScore,
+              });
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to auto-grow QuestionBank:", err);
+        }
+      })();
+
       return { completed: true, report: savedReport };
     }
 
@@ -231,6 +272,7 @@ class InterviewService {
       type: interview.type,
       difficulty: interview.difficulty,
       techStacks: interview.techStacks || undefined,
+      company: (interview as any).company || undefined,
       mode: interview.mode as "voice" | "text",
       previousQuestion: question.question,
       previousAnswer: data.answer,
@@ -238,9 +280,16 @@ class InterviewService {
       coveredTopics,
       isFollowUp,
       weakestDimension,
+      candidateQuestions: await retrieveQuestions({
+        type: interview.type,
+        difficulty: interview.difficulty,
+        role: interview.role,
+        techStacks: interview.techStacks ? [interview.techStacks] : undefined,
+        coveredTopics,
+      }),
     });
 
-    const nextQuestion = await callGemini(prompt);
+    const nextQuestion = await callGroqFast(prompt);
 
     const savedQuestion = await questionRepository.create({
       interviewId,

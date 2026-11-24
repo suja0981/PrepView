@@ -7,6 +7,7 @@ interface QuestionPromptInput {
   type: string;
   difficulty: string;
   techStacks?: string;
+  company?: string;
   mode?: "voice" | "text";
   previousQuestion?: string;
   previousAnswer?: string;
@@ -14,6 +15,7 @@ interface QuestionPromptInput {
   weakestDimension?: string; // "technicalAccuracy" | "reasoning" | "communication"
   coveredTopics?: string[];
   isFollowUp?: boolean;
+  candidateQuestions?: string[];
 }
 
 // ── Difficulty calibration by experience level ────────────────────────────────
@@ -108,8 +110,17 @@ export function buildQuestionPrompt(data: QuestionPromptInput): string {
   const difficultyCtx = getDifficultyContext(data.difficulty);
   const roleCtx = getRoleContext(data.role);
 
+  const companyLine = data.company
+    ? `You are interviewing a candidate for ${data.company}. Tailor questions to their known engineering culture and tech stack where relevant.`
+    : "";
+
   const topicAvoidance = data.coveredTopics?.length
     ? `Topics already covered — do NOT repeat: ${data.coveredTopics.join(", ")}.`
+    : "";
+
+  const candidatesBlock = data.candidateQuestions?.length
+    ? `Reference question bank styles (generate a question similar in depth/practical tone, but do NOT copy verbatim):
+${data.candidateQuestions.map((q, idx) => `${idx + 1}. ${q}`).join("\n")}`
     : "";
 
   // Follow-up: probe the specific weak dimension rather than a generic re-ask
@@ -128,9 +139,11 @@ ${data.evaluationFeedback ? `Feedback on that answer: ${data.evaluationFeedback}
 ${!data.isFollowUp ? "Generate the next question on a fresh topic." : ""}`;
 
   return `You are a professional technical interviewer conducting a ${data.type} interview for a ${data.role} role.
+${companyLine}
 ${difficultyCtx}
 ${roleCtx}
 ${strategy}
+${candidatesBlock}
 ${topicAvoidance}
 ${followUpBlock}
 ${contextBlock}
