@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Plus, FileSearch, X, Crown,
-  Sparkles, CreditCard, ChevronRight, HelpCircle
+  Sparkles, CreditCard, ChevronRight, HelpCircle, History, User
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { motion } from "framer-motion";
@@ -14,11 +14,13 @@ interface SidebarProps {
 const mainNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/interview/create", label: "Practice Hub", icon: Plus, badge: "New" },
+  { to: "/interviews", label: "History", icon: History },
   { to: "/resume", label: "Resume AI", icon: FileSearch },
 ];
 
 const secondaryNav = [
   { to: "/pricing", label: "Pricing & Plans", icon: CreditCard },
+  { to: "/profile", label: "Profile", icon: User },
 ];
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {

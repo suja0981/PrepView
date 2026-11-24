@@ -95,6 +95,16 @@ export const getInterviewDetails = asyncHandler(async (req, res) => {
   });
 });
 
+export const getUserInterviewsPaginated = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(20, Math.max(1, parseInt(req.query.limit as string) || 10));
+  const { status, type, difficulty } = req.query as { status?: string; type?: string; difficulty?: string };
+
+  const result = await interviewService.getUserInterviewsPaginated(userId, { page, limit, status, type, difficulty });
+  res.json({ success: true, data: result });
+});
+
 export const transcribeAudio = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new AppError("No audio file provided", 400);

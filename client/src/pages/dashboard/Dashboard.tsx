@@ -176,7 +176,7 @@ export default function Dashboard() {
             <h2 className="text-sm font-medium text-foreground">Recent interviews</h2>
             {(stats?.recentInterviews?.length ?? 0) > 0 && (
               <Link
-                to="/interview/create"
+                to="/interviews"
                 className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
               >
                 View all →

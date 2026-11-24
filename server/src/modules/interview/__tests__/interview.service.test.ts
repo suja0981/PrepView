@@ -15,11 +15,10 @@ vi.mock("../interview.model", () => ({
   },
 }));
 
-vi.mock("../../../ai/services/gemini.service", () => ({
-  callGemini: vi.fn().mockResolvedValue({
-    questions: [
-      { question: "Explain Closures in JS", topic: "Javascript" },
-    ],
+vi.mock("../../../ai/services/llm.service", () => ({
+  callGroqFast: vi.fn().mockResolvedValue({
+    question: "Explain Closures in JS",
+    topic: "Javascript",
   }),
 }));
 

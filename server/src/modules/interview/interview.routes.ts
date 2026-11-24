@@ -8,6 +8,7 @@ import {
   getInterviewDetails,
   getInterviewReport,
   getUserInterviews,
+  getUserInterviewsPaginated,
   submitAnswer,
   transcribeAudio,
 } from "./interview.controller";
@@ -26,6 +27,8 @@ const interviewRouter = Router();
 interviewRouter.use(authenticate);
 
 interviewRouter.post("/", aiRateLimit, validate(CreateInterviewSchema), createInterview);
+
+interviewRouter.get("/history", getUserInterviewsPaginated);
 
 interviewRouter.get("/", getUserInterviews);
 

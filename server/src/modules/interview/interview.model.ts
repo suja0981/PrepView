@@ -15,6 +15,12 @@ const interviewSchema = new Schema(
       trim: true,
     },
 
+    company: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
     // Extended: technical | behavioral | system_design | mixed (dsa deferred until code editor added)
     type: {
       type: String,
@@ -69,6 +75,8 @@ const interviewSchema = new Schema(
     timestamps: true,
   },
 );
+
+interviewSchema.index({ userId: 1, createdAt: -1 });
 
 export type Interview = InferSchemaType<typeof interviewSchema>;
 
