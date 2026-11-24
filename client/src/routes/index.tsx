@@ -17,6 +17,10 @@ import NotFound from "@/pages/NotFound";
 import Pricing from "@/pages/Pricing";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentCancel from "@/pages/PaymentCancel";
+import Profile from "@/pages/Profile";
+import SharedReport from "@/pages/SharedReport";
+
+import InterviewHistory from "@/pages/interview/InterviewHistory";
 
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
@@ -24,6 +28,7 @@ import PublicRoute from "./PublicRoute";
 export const router = createBrowserRouter([
   // Fully public
   { path: "/", element: <Landing /> },
+  { path: "/report/share/:shareToken", element: <SharedReport /> },
 
   // Public auth routes
   {
@@ -60,10 +65,16 @@ export const router = createBrowserRouter([
           // Tools
           { path: "/resume", element: <ResumeAnalyzer /> },
 
+          // History
+          { path: "/interviews", element: <InterviewHistory /> },
+
           // Payments
           { path: "/pricing", element: <Pricing /> },
           { path: "/payment/success", element: <PaymentSuccess /> },
           { path: "/payment/cancel", element: <PaymentCancel /> },
+
+          // Profile
+          { path: "/profile", element: <Profile /> },
         ],
       },
     ],

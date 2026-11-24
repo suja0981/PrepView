@@ -15,6 +15,8 @@ import { interviewRouter } from "./modules/interview";
 import { dashboardRouter } from "./modules/dashboard";
 import { resumeRouter } from "./modules/resume/resume.routes";
 import { paymentRouter } from "./modules/payment/payment.routes";
+import { userRouter } from "./modules/user/user.routes";
+import { reportRouter } from "./modules/report";
 
 export function createApp() {
   const app = express();
@@ -56,6 +58,8 @@ export function createApp() {
   app.use("/api/v1/dashboard", dashboardRouter);
   app.use("/api/v1/resume", resumeRouter);
   app.use("/api/v1/payments", paymentRouter);
+  app.use("/api/v1/user", userRouter);
+  app.use("/api/v1/reports", reportRouter);
 
   app.use(env.API_PREFIX, apiRouter);
   app.use(notFoundMiddleware);

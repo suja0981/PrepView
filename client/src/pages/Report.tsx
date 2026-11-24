@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { Loader2, ArrowLeft, Download, CheckCircle, TrendingUp, Clock, Sparkles, AlertTriangle } from "lucide-react";
+import { Loader2, ArrowLeft, Download, CheckCircle, TrendingUp, Clock, Sparkles, AlertTriangle, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useInterviewDetails } from "@/hooks/useInterview";
 import {
@@ -109,6 +110,55 @@ export default function Report() {
   const { interview, report, questions } = data.data;
   const questionList = questions ?? [];
 
+  // Compute actual WPM for voice interviews
+  const voiceStats = (() => {
+    if (interview.mode !== "voice") return null;
+
+    let totalWords = 0;
+    let totalResponseSeconds = 0;
+
+    for (const q of questionList) {
+      if (q.answer?.answer) {
+        const words = q.answer.answer.trim().split(/\s+/).filter(Boolean).length;
+        totalWords += words;
+        if (typeof q.answer.responseTime === "number" && q.answer.responseTime > 0) {
+          totalResponseSeconds += q.answer.responseTime;
+        }
+      }
+    }
+
+    if (totalWords === 0 || totalResponseSeconds <= 0) {
+      return { wpm: null };
+    }
+
+    const totalMinutes = totalResponseSeconds / 60;
+    const wpm = Math.round(totalWords / totalMinutes);
+    return { wpm };
+  })();
+
+  // Compute actual interview duration
+  const interviewDuration = (() => {
+    if (!interview.startedAt || !interview.endedAt) return null;
+    const diffMs = new Date(interview.endedAt).getTime() - new Date(interview.startedAt).getTime();
+    if (diffMs <= 0) return null;
+    const totalSecs = Math.round(diffMs / 1000);
+    const m = Math.floor(totalSecs / 60);
+    const s = totalSecs % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  })();
+
+  const handleShare = () => {
+    if (!report?.shareToken) {
+      toast.error("Share link is not available yet.");
+      return;
+    }
+    const shareUrl = `${window.location.origin}/report/share/${report.shareToken}`;
+    navigator.clipboard.writeText(shareUrl).then(
+      () => toast.success("Public share link copied to clipboard!"),
+      () => toast.error("Could not copy link to clipboard")
+    );
+  };
+
   const competencies = [
     { label: "Technical", value: report.technicalScore, color: "oklch(var(--primary))" },
     { label: "Reasoning", value: report.reasoningScore, color: "oklch(var(--brand-violet))" },
@@ -121,7 +171,7 @@ export default function Report() {
 
       {/* Header */}
       <FadeIn>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
             <Link to="/dashboard" className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors mb-3 print:hidden">
               <ArrowLeft size={13} /> Back to Dashboard
@@ -131,16 +181,36 @@ export default function Report() {
               <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Executive Performance Scorecard</span>
             </div>
             <h1 className="text-2xl font-semibold tracking-tight">Interview Report</h1>
-            <p className="mt-0.5 text-sm text-muted-foreground capitalize">
-              {interview.role}{interview.company ? ` · ${interview.company}` : ""} · {interview.difficulty} · {interview.type.replace(/_/g, " ")}
-            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span className="capitalize">{interview.role}{interview.company ? ` · ${interview.company}` : ""}</span>
+              <span>·</span>
+              <span className="capitalize">{interview.difficulty}</span>
+              <span>·</span>
+              <span className="capitalize">{interview.type.replace(/_/g, " ")}</span>
+              {interviewDuration && (
+                <>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-1 font-mono text-[12px] bg-secondary/80 px-2 py-0.5 rounded-md border border-border/50">
+                    <Clock size={11} /> {interviewDuration}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
-          <button
-            onClick={() => window.print()}
-            className="print:hidden shrink-0 flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors shadow-xs"
-          >
-            <Download size={13} /> Export PDF
-          </button>
+          <div className="print:hidden flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-foreground hover:bg-secondary/60 transition-colors shadow-xs"
+            >
+              <Share2 size={13} className="text-primary" /> Share Link
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors shadow-xs"
+            >
+              <Download size={13} /> Export PDF
+            </button>
+          </div>
         </div>
       </FadeIn>
 
@@ -172,7 +242,7 @@ export default function Report() {
         </div>
       </FadeIn>
 
-      {/* Speech Delivery & Fluency Scorecard (Voice Mode) */}
+      {/* Speech Delivery & Fluency Scorecard (Voice Mode only) */}
       {interview.mode === "voice" && (
         <FadeIn delay={0.14}>
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 space-y-3 shadow-xs">
@@ -180,9 +250,15 @@ export default function Report() {
               <Clock size={15} className="text-primary" />
               <p className="text-sm font-semibold text-foreground">Speech Delivery & Fluency Analysis</p>
             </div>
-            <p className="text-[13px] text-muted-foreground leading-relaxed">
-              Your voice responses averaged <span className="font-mono font-semibold text-foreground">125-145 WPM</span> with optimal technical delivery. Maintain a natural pace between 120–160 WPM during live engineering interviews for maximum clarity.
-            </p>
+            {voiceStats?.wpm ? (
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                Your voice responses averaged <span className="font-mono font-semibold text-foreground">{voiceStats.wpm} WPM</span> (avg speaking pace). Maintain a natural pace between 120–160 WPM during live engineering interviews for maximum clarity.
+              </p>
+            ) : (
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                Speaking pace: <span className="font-mono font-semibold text-foreground">N/A — insufficient data</span>.
+              </p>
+            )}
           </div>
         </FadeIn>
       )}

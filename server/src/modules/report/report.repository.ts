@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { ReportModel } from "./report.model";
 
 type CreateReportInput = {
@@ -9,15 +10,26 @@ type CreateReportInput = {
   strengths: string[];
   improvements: string[];
   summary: string;
+  shareToken?: string;
 };
 
 class ReportRepository {
   async create(data: CreateReportInput) {
-    return ReportModel.create(data);
+    const shareToken = data.shareToken || crypto.randomBytes(16).toString("hex");
+    return ReportModel.create({ ...data, shareToken });
   }
 
   async findByInterview(interviewId: string) {
-    return ReportModel.findOne({ interviewId });
+    const report = await ReportModel.findOne({ interviewId });
+    if (report && !report.shareToken) {
+      report.shareToken = crypto.randomBytes(16).toString("hex");
+      await report.save();
+    }
+    return report;
+  }
+
+  async findByShareToken(shareToken: string) {
+    return ReportModel.findOne({ shareToken });
   }
 }
 
