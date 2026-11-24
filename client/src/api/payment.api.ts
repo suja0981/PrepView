@@ -1,11 +1,12 @@
 import { apiClient } from "./axios";
 
-/** Fetches Razorpay checkout order parameters */
+/** Fetches Razorpay checkout order/subscription parameters */
 export const createCheckoutSession = () =>
   apiClient.post<{
     success: boolean;
     data: {
-      orderId: string;
+      orderId?: string;
+      subscriptionId?: string;
       keyId: string;
       amount: number;
       currency: string;

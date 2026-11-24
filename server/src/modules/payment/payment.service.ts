@@ -12,12 +12,38 @@ const razorpayInstance = new Razorpay({
 
 export const paymentService = {
   /**
-   * Creates a Razorpay Order for ₹799 ($9 equivalent) Premium plan.
+   * Creates a Razorpay Subscription (if plan ID is configured) or Order for ₹799 ($9 equivalent) Premium plan.
    */
   async createCheckoutSession(userId: string, userEmail: string) {
     const user = await User.findById(userId);
     if (!user) throw new AppError("User not found", 404);
     if (user.plan === "premium") throw new AppError("You are already on the Premium plan", 400);
+
+    // If a valid RAZORPAY_PLAN_ID is provided, attempt to create a Razorpay subscription
+    if (env.RAZORPAY_PLAN_ID && env.RAZORPAY_PLAN_ID !== "plan_placeholder") {
+      try {
+        const subscription = await (razorpayInstance.subscriptions as any).create({
+          plan_id: env.RAZORPAY_PLAN_ID,
+          customer_notify: 1,
+          total_count: 12,
+          notes: {
+            userId,
+            userEmail,
+          },
+        });
+
+        return {
+          subscriptionId: subscription.id,
+          keyId: env.RAZORPAY_KEY_ID,
+          amount: 79900,
+          currency: "INR",
+          userName: user.name,
+          userEmail,
+        };
+      } catch (err) {
+        console.warn("Failed to create Razorpay subscription, falling back to one-time order:", err);
+      }
+    }
 
     const orderOptions = {
       amount: 79900, // ₹799 in paise
@@ -81,12 +107,39 @@ export const paymentService = {
   },
 
   /**
-   * Handles user self-service billing / portal operations.
+   * Handles user self-service billing / portal operations (cancellation).
    */
   async createPortalSession(userId: string): Promise<string> {
     const user = await User.findById(userId);
     if (!user) throw new AppError("User not found", 404);
-    return `${env.CLIENT_URL}/dashboard`;
+
+    if (user.plan === "premium") {
+      // Cancel active subscription via Razorpay API if subscription ID exists
+      if (user.razorpaySubscriptionId) {
+        try {
+          await (razorpayInstance.subscriptions as any).cancel(user.razorpaySubscriptionId);
+        } catch (err) {
+          console.warn("Could not cancel Razorpay subscription remotely:", err);
+        }
+      }
+
+      await User.findByIdAndUpdate(userId, {
+        plan: "free",
+        razorpaySubscriptionId: null,
+        planExpiresAt: null,
+      });
+
+      await PaymentLog.create({
+        userId,
+        eventId: `cancel_${Date.now()}`,
+        type: "subscription.cancelled",
+        status: "success",
+      });
+
+      return `${env.CLIENT_URL}/pricing?status=cancelled`;
+    }
+
+    return `${env.CLIENT_URL}/pricing`;
   },
 
   /**
@@ -107,7 +160,68 @@ export const paymentService = {
     const eventType = event.event;
     const payload = event.payload;
 
-    if (eventType === "payment.captured" || eventType === "order.paid") {
+    if (eventType === "subscription.activated") {
+      const subscription = payload?.subscription?.entity;
+      const userId = subscription?.notes?.userId;
+      if (userId) {
+        const expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+        await User.findByIdAndUpdate(userId, {
+          plan: "premium",
+          razorpaySubscriptionId: subscription.id,
+          planExpiresAt: expiresAt,
+        });
+
+        await PaymentLog.create({
+          userId,
+          eventId: event.created_at ? `${eventType}_${event.created_at}` : `sub_${Date.now()}`,
+          type: eventType,
+          status: "success",
+          meta: { subscriptionId: subscription.id },
+        });
+      }
+    } else if (eventType === "subscription.charged") {
+      const subscription = payload?.subscription?.entity;
+      const userId = subscription?.notes?.userId;
+      if (userId) {
+        const expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+        await User.findByIdAndUpdate(userId, {
+          plan: "premium",
+          planExpiresAt: expiresAt,
+        });
+
+        await PaymentLog.create({
+          userId,
+          eventId: event.created_at ? `${eventType}_${event.created_at}` : `sub_charge_${Date.now()}`,
+          type: eventType,
+          status: "success",
+        });
+      }
+    } else if (
+      eventType === "subscription.cancelled" ||
+      eventType === "subscription.completed" ||
+      eventType === "subscription.halted"
+    ) {
+      const subscription = payload?.subscription?.entity;
+      const userId = subscription?.notes?.userId;
+      if (userId) {
+        await User.findByIdAndUpdate(userId, {
+          plan: "free",
+          razorpaySubscriptionId: null,
+          planExpiresAt: null,
+        });
+
+        await PaymentLog.create({
+          userId,
+          eventId: event.created_at ? `${eventType}_${event.created_at}` : `sub_cancel_${Date.now()}`,
+          type: eventType,
+          status: "success",
+        });
+      }
+    } else if (eventType === "payment.captured" || eventType === "order.paid") {
       const entity = payload?.payment?.entity || payload?.order?.entity;
       const userId = entity?.notes?.userId;
 

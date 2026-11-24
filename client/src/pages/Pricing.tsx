@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Check, Zap, Loader2, ArrowRight, Crown,
@@ -33,7 +33,7 @@ const PREMIUM_FEATURES = [
 const PRICING_FAQS = [
   {
     q: "Can I cancel my subscription anytime?",
-    a: "Yes, you can cancel your subscription at any time directly through your billing portal with a single click. You will retain access until the end of your billing cycle.",
+    a: "Yes, you can cancel your subscription at any time directly with the 'Manage subscription' button. Your plan will immediately be updated and recurring charges will stop.",
   },
   {
     q: "How does the 3 free interviews limit work?",
@@ -41,17 +41,30 @@ const PRICING_FAQS = [
   },
   {
     q: "Is payment information securely handled?",
-    a: "All payment processing is handled securely by Razorpay. PrepView does not store or process your credit card details.",
+    a: "All payment processing is handled securely by Razorpay. PrepView does not store or process your credit card or bank details.",
+  },
+  {
+    q: "What payment methods are supported?",
+    a: "Razorpay supports UPI, Credit/Debit Cards (Visa, Mastercard, RuPay), NetBanking, and leading digital wallets.",
   },
 ];
 
 export default function Pricing() {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
+  const { user, refetchUser } = useAuthContext();
   const isPremium = user?.plan === "premium";
   const [isLoading, setIsLoading] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("status") === "cancelled") {
+      toast.info("Subscription cancelled. Your account has returned to the Free plan.");
+      refetchUser();
+      navigate("/pricing", { replace: true });
+    }
+  }, [navigate, refetchUser]);
 
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -77,13 +90,12 @@ export default function Pricing() {
       const res = await createCheckoutSession();
       const checkoutData = res.data.data;
 
-      const options = {
+      const options: any = {
         key: checkoutData.keyId,
         amount: checkoutData.amount,
         currency: checkoutData.currency,
         name: "PrepView Premium",
         description: "Unlimited AI Mock Interviews & Resume Analysis",
-        order_id: checkoutData.orderId,
         prefill: {
           name: checkoutData.userName,
           email: checkoutData.userEmail,
@@ -91,7 +103,24 @@ export default function Pricing() {
         theme: {
           color: "#4F7CFF",
         },
-        handler: async function (response: any) {
+        modal: {
+          ondismiss: function () {
+            setIsLoading(false);
+          },
+        },
+      };
+
+      if (checkoutData.subscriptionId) {
+        options.subscription_id = checkoutData.subscriptionId;
+        options.handler = async function (response: any) {
+          toast.success("Subscription activated successfully!");
+          refetchUser();
+          navigate(`/payment/success?session_id=${response.razorpay_payment_id || checkoutData.subscriptionId}`);
+          setIsLoading(false);
+        };
+      } else {
+        options.order_id = checkoutData.orderId;
+        options.handler = async function (response: any) {
           try {
             await verifyPayment({
               orderId: response.razorpay_order_id,
@@ -99,19 +128,15 @@ export default function Pricing() {
               signature: response.razorpay_signature,
             });
             toast.success("Payment verified! Account upgraded to Premium.");
+            refetchUser();
             navigate(`/payment/success?session_id=${response.razorpay_payment_id}`);
           } catch (err: any) {
             toast.error(err.response?.data?.message ?? "Payment verification failed");
           } finally {
             setIsLoading(false);
           }
-        },
-        modal: {
-          ondismiss: function () {
-            setIsLoading(false);
-          },
-        },
-      };
+        };
+      }
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.open();
@@ -122,10 +147,15 @@ export default function Pricing() {
   };
 
   const handleManage = async () => {
+    if (!window.confirm("Are you sure you want to cancel your Premium subscription? You will lose access to premium features.")) {
+      return;
+    }
     setIsPortalLoading(true);
     try {
       const res = await createPortalSession();
-      window.location.href = res.data.data.url;
+      if (res.data.data.url) {
+        window.location.href = res.data.data.url;
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.message ?? "Failed to open billing portal");
       setIsPortalLoading(false);
