@@ -22,8 +22,8 @@ export function requirePlan(required: "premium") {
         });
       }
       next();
-    } catch {
-      next();
+    } catch (err) {
+      next(err);
     }
   };
 }

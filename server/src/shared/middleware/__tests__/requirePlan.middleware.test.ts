@@ -54,4 +54,16 @@ describe("requirePlan Middleware", () => {
     expect(next).toHaveBeenCalled();
     expect(res.status).not.toHaveBeenCalled();
   });
+
+  it("should fail closed and pass error to next(err) if DB lookup rejects", async () => {
+    const dbError = new Error("Mongo timeout");
+    vi.mocked(User.findById).mockReturnValue({
+      select: vi.fn().mockRejectedValue(dbError),
+    } as any);
+
+    const middleware = requirePlan("premium");
+    await middleware(req as Request, res as Response, next);
+
+    expect(next).toHaveBeenCalledWith(dbError);
+  });
 });

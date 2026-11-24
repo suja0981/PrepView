@@ -9,14 +9,13 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run",
+    "test": "vitest run src",
     "seed": "tsx src/scripts/seed-question-bank.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/genai": "^2.12.0",
     "@types/multer": "^2.2.0",
     "@types/pdf-parse": "^1.1.5",
     "bcrypt": "^6.0.0",

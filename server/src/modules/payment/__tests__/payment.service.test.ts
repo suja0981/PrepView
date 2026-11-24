@@ -15,6 +15,7 @@ vi.mock("../../user/user.model", () => ({
 vi.mock("../payment.model", () => ({
   PaymentLog: {
     create: vi.fn(),
+    exists: vi.fn().mockResolvedValue(null),
   },
 }));
 
@@ -154,6 +155,22 @@ describe("PaymentService", () => {
           status: "success",
         }),
       );
+    });
+
+    it("should skip duplicate webhook events via idempotency check", async () => {
+      vi.mocked(PaymentLog.exists).mockResolvedValueOnce({ _id: "existing" } as any);
+
+      await paymentService.handleWebhook(
+        {
+          event: "subscription.charged",
+          payload: { subscription: { entity: { id: "sub_dup", notes: { userId: "user_99" } } } },
+        },
+        "sig",
+        Buffer.from(""),
+      );
+
+      expect(User.findByIdAndUpdate).not.toHaveBeenCalled();
+      expect(PaymentLog.create).not.toHaveBeenCalled();
     });
   });
 });

@@ -86,6 +86,12 @@ export const paymentService = {
       throw new AppError("Invalid payment signature verification", 400);
     }
 
+    const eventId = `pay_${paymentId}`;
+    const alreadyProcessed = await PaymentLog.exists({ eventId });
+    if (alreadyProcessed) {
+      return { success: true };
+    }
+
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 1);
 
@@ -97,7 +103,7 @@ export const paymentService = {
 
     await PaymentLog.create({
       userId,
-      eventId: `pay_${paymentId}`,
+      eventId,
       type: "payment.captured",
       status: "success",
       meta: { orderId, paymentId },
@@ -146,7 +152,14 @@ export const paymentService = {
    * Handles incoming Razorpay webhook events after signature verification.
    */
   async handleWebhook(event: any, signature: string, rawBody: Buffer): Promise<void> {
-    if (env.RAZORPAY_WEBHOOK_SECRET && env.RAZORPAY_WEBHOOK_SECRET !== "whsec_placeholder") {
+    const hasWebhookSecret =
+      Boolean(env.RAZORPAY_WEBHOOK_SECRET) && env.RAZORPAY_WEBHOOK_SECRET !== "whsec_placeholder";
+
+    if (env.NODE_ENV === "production" && !hasWebhookSecret) {
+      throw new AppError("Razorpay webhook secret is not configured", 500);
+    }
+
+    if (hasWebhookSecret) {
       const expectedSignature = crypto
         .createHmac("sha256", env.RAZORPAY_WEBHOOK_SECRET)
         .update(rawBody)
@@ -157,90 +170,60 @@ export const paymentService = {
       }
     }
 
-    const eventType = event.event;
+    const eventType: string = event.event;
     const payload = event.payload;
+    const entity = payload?.subscription?.entity || payload?.payment?.entity || payload?.order?.entity;
+    const userId = entity?.notes?.userId;
+    if (!userId) return;
 
-    if (eventType === "subscription.activated") {
-      const subscription = payload?.subscription?.entity;
-      const userId = subscription?.notes?.userId;
-      if (userId) {
-        const expiresAt = new Date();
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
+    const entityId = entity?.id || event.created_at || Date.now();
+    const eventId = `${eventType}_${entityId}`;
 
-        await User.findByIdAndUpdate(userId, {
-          plan: "premium",
-          razorpaySubscriptionId: subscription.id,
-          planExpiresAt: expiresAt,
-        });
+    // Idempotency guard — avoid re-extending billing cycle on webhook retries
+    if (await PaymentLog.exists({ eventId })) return;
 
-        await PaymentLog.create({
-          userId,
-          eventId: event.created_at ? `${eventType}_${event.created_at}` : `sub_${Date.now()}`,
-          type: eventType,
-          status: "success",
-          meta: { subscriptionId: subscription.id },
-        });
+    if (
+      eventType === "subscription.activated" ||
+      eventType === "subscription.charged" ||
+      eventType === "payment.captured" ||
+      eventType === "order.paid"
+    ) {
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      const update: Record<string, any> = {
+        plan: "premium",
+        planExpiresAt: expiresAt,
+      };
+      if (eventType === "subscription.activated" && entity?.id) {
+        update.razorpaySubscriptionId = entity.id;
       }
-    } else if (eventType === "subscription.charged") {
-      const subscription = payload?.subscription?.entity;
-      const userId = subscription?.notes?.userId;
-      if (userId) {
-        const expiresAt = new Date();
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
 
-        await User.findByIdAndUpdate(userId, {
-          plan: "premium",
-          planExpiresAt: expiresAt,
-        });
-
-        await PaymentLog.create({
-          userId,
-          eventId: event.created_at ? `${eventType}_${event.created_at}` : `sub_charge_${Date.now()}`,
-          type: eventType,
-          status: "success",
-        });
-      }
+      await User.findByIdAndUpdate(userId, update);
+      await PaymentLog.create({
+        userId,
+        eventId,
+        type: eventType,
+        status: "success",
+        ...(entity?.id ? { meta: { subscriptionId: entity.id } } : {}),
+      });
     } else if (
       eventType === "subscription.cancelled" ||
       eventType === "subscription.completed" ||
       eventType === "subscription.halted"
     ) {
-      const subscription = payload?.subscription?.entity;
-      const userId = subscription?.notes?.userId;
-      if (userId) {
-        await User.findByIdAndUpdate(userId, {
-          plan: "free",
-          razorpaySubscriptionId: null,
-          planExpiresAt: null,
-        });
+      await User.findByIdAndUpdate(userId, {
+        plan: "free",
+        razorpaySubscriptionId: null,
+        planExpiresAt: null,
+      });
 
-        await PaymentLog.create({
-          userId,
-          eventId: event.created_at ? `${eventType}_${event.created_at}` : `sub_cancel_${Date.now()}`,
-          type: eventType,
-          status: "success",
-        });
-      }
-    } else if (eventType === "payment.captured" || eventType === "order.paid") {
-      const entity = payload?.payment?.entity || payload?.order?.entity;
-      const userId = entity?.notes?.userId;
-
-      if (userId) {
-        const expiresAt = new Date();
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
-
-        await User.findByIdAndUpdate(userId, {
-          plan: "premium",
-          planExpiresAt: expiresAt,
-        });
-
-        await PaymentLog.create({
-          userId,
-          eventId: event.created_at ? `${eventType}_${event.created_at}` : `rzp_${Date.now()}`,
-          type: eventType,
-          status: "success",
-        });
-      }
+      await PaymentLog.create({
+        userId,
+        eventId,
+        type: eventType,
+        status: "success",
+      });
     }
   },
 };

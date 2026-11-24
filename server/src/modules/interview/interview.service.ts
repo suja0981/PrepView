@@ -78,8 +78,6 @@ class InterviewService {
     }
     // ── End plan enforcement ─────────────────────────────────────────────────
 
-    const interview = await interviewRepository.create(userId, data);
-
     const candidateQuestions = await retrieveQuestions({
       type: data.type,
       difficulty: data.difficulty,
@@ -97,7 +95,10 @@ class InterviewService {
       candidateQuestions,
     });
 
+    // Generate the first question before persisting the interview so AI failures never leave orphan records or burn free quota
     const questionData = await callGroqFast(prompt);
+
+    const interview = await interviewRepository.create(userId, data);
 
     const question = await questionRepository.create({
       interviewId: interview.id,
@@ -110,11 +111,15 @@ class InterviewService {
     return { interview, question };
   }
 
-  async getInterview(id: string) {
+  async getInterview(id: string, userId?: string) {
     const interview = await interviewRepository.findById(id);
 
     if (!interview) {
       throw new AppError("Interview not found.", 404);
+    }
+
+    if (userId && interview.userId.toString() !== userId) {
+      throw new AppError("Access denied.", 403);
     }
 
     const currentQuestion = await questionRepository.findLatest(id);
@@ -307,15 +312,27 @@ class InterviewService {
     };
   }
 
-  async getInterviewReport(interviewId: string) {
+  async getInterviewReport(interviewId: string, userId?: string) {
+    if (userId) {
+      const interview = await interviewRepository.findById(interviewId);
+      if (!interview) throw new AppError("Interview not found.", 404);
+      if (interview.userId.toString() !== userId) {
+        throw new AppError("Access denied.", 403);
+      }
+    }
+
     const report = await reportRepository.findByInterview(interviewId);
     if (!report) throw new AppError("Report not found.", 404);
     return report;
   }
 
-  async getInterviewDetails(interviewId: string) {
+  async getInterviewDetails(interviewId: string, userId?: string) {
     const interview = await interviewRepository.findById(interviewId);
     if (!interview) throw new AppError("Interview not found.", 404);
+
+    if (userId && interview.userId.toString() !== userId) {
+      throw new AppError("Access denied.", 403);
+    }
 
     const questions = await questionRepository.findByInterview(interviewId);
     const answers = await answerRepository.findByInterview(interviewId);

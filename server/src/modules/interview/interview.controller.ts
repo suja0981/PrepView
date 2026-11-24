@@ -26,7 +26,7 @@ export const getInterview = asyncHandler(
       throw new AppError("Invalid interview ID", 400);
     }
 
-    const data = await interviewService.getInterview(id);
+    const data = await interviewService.getInterview(id, req.user!.userId);
 
     res.status(200).json({
       success: true,
@@ -72,7 +72,7 @@ export const getInterviewReport = asyncHandler(async (req, res) => {
     throw new AppError("Invalid interview ID", 400);
   }
 
-  const report = await interviewService.getInterviewReport(id);
+  const report = await interviewService.getInterviewReport(id, req.user!.userId);
 
   res.status(200).json({
     success: true,
@@ -87,7 +87,7 @@ export const getInterviewDetails = asyncHandler(async (req, res) => {
     throw new AppError("Invalid interview ID", 400);
   }
 
-  const interview = await interviewService.getInterviewDetails(id);
+  const interview = await interviewService.getInterviewDetails(id, req.user!.userId);
 
   res.status(200).json({
     success: true,
