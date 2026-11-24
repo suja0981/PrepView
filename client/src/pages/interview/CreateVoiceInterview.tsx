@@ -144,7 +144,7 @@ export default function CreateVoiceInterview() {
           {/* Role Presets */}
           <div className="rounded-xl border border-border bg-card p-6 space-y-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Quick Start</p>
+              <p className="text-xs font-semibold text-muted-foreground">Quick Start</p>
               <p className="text-[12px] text-muted-foreground mt-0.5">Pick a preset or configure manually below.</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -153,7 +153,7 @@ export default function CreateVoiceInterview() {
                   key={preset.label}
                   type="button"
                   onClick={() => applyPreset(preset)}
-                  className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-all text-[12.5px] font-medium ${
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors text-[12.5px] font-medium ${
                     selectedPreset === preset.label
                       ? "border-primary bg-primary/8 text-foreground ring-1 ring-primary/20"
                       : "border-border text-muted-foreground hover:border-border/60 hover:bg-secondary/50 hover:text-foreground"
@@ -168,7 +168,7 @@ export default function CreateVoiceInterview() {
 
           {/* Role & Tech Stacks */}
           <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Target Role</p>
+            <p className="text-xs font-semibold text-muted-foreground">Target Role</p>
 
             <FormField control={form.control} name="role" render={({ field }) => (
               <FormItem>
@@ -210,7 +210,7 @@ export default function CreateVoiceInterview() {
           {/* Interview Type */}
           <div className="rounded-xl border border-border bg-card p-6 space-y-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Interview Type</p>
+              <p className="text-xs font-semibold text-muted-foreground">Interview Type</p>
               <p className="text-[12px] text-muted-foreground mt-0.5">Weak answers trigger a targeted follow-up automatically.</p>
             </div>
             <FormField control={form.control} name="type" render={({ field }) => (
@@ -221,7 +221,7 @@ export default function CreateVoiceInterview() {
                       key={value}
                       type="button"
                       onClick={() => field.onChange(value)}
-                      className={`flex flex-col items-start gap-1.5 rounded-lg border px-4 py-3 text-left transition-all ${
+                      className={`flex flex-col items-start gap-1.5 rounded-lg border px-4 py-3 text-left transition-colors ${
                         selectedType === value
                           ? "border-primary bg-primary/8 ring-1 ring-primary/20"
                           : "border-border hover:border-border/60 hover:bg-secondary/50"
@@ -242,7 +242,7 @@ export default function CreateVoiceInterview() {
 
           {/* Difficulty */}
           <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Difficulty</p>
+            <p className="text-xs font-semibold text-muted-foreground">Difficulty</p>
             <FormField control={form.control} name="difficulty" render={({ field }) => (
               <FormItem>
                 <div className="grid grid-cols-3 gap-3">
@@ -251,7 +251,7 @@ export default function CreateVoiceInterview() {
                       key={value}
                       type="button"
                       onClick={() => field.onChange(value)}
-                      className={`flex flex-col items-start gap-0.5 rounded-lg border px-4 py-3 text-left transition-all ${
+                      className={`flex flex-col items-start gap-0.5 rounded-lg border px-4 py-3 text-left transition-colors ${
                         selectedDifficulty === value
                           ? "border-primary bg-primary/8 ring-1 ring-primary/20"
                           : "border-border hover:border-border/60 hover:bg-secondary/50"
@@ -273,17 +273,20 @@ export default function CreateVoiceInterview() {
           <div className="rounded-xl border border-border bg-secondary/30 p-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
               <Clock size={13} />
-              <span>
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-foreground font-medium capitalize">
-                  {types.find(t => t.value === selectedType)?.label} · {selectedDifficulty}
+                  {types.find(t => t.value === selectedType)?.label}
                 </span>
-                {" "}· Voice · 7–12 questions
-              </span>
+                <span className="h-3 w-px bg-border" />
+                <span className="capitalize">{selectedDifficulty}</span>
+                <span className="h-3 w-px bg-border" />
+                <span>Voice mode (7 to 12 questions)</span>
+              </div>
             </div>
             <Button type="submit" disabled={mutation.isPending} className="shrink-0 h-9 px-5 text-[13px] font-medium">
               {mutation.isPending
                 ? <><Loader2 size={14} className="mr-1.5 animate-spin" /> Generating...</>
-                : "Start session →"
+                : "Start session"
               }
             </Button>
           </div>

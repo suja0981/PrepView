@@ -41,45 +41,45 @@ export default function ScoreChart({ data }: ScoreChartProps) {
           <AreaChart data={formattedData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="oklch(var(--primary))" stopOpacity={0.15} />
-                <stop offset="100%" stopColor="oklch(var(--primary))" stopOpacity={0} />
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(var(--border))" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
             <XAxis
               dataKey="displayDate"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11, fill: "oklch(var(--muted-foreground))" }}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
               dy={10}
             />
             <YAxis
               domain={[0, 100]}
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11, fill: "oklch(var(--muted-foreground))" }}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "oklch(var(--card))",
-                border: "1px solid oklch(var(--border))",
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--border)",
                 borderRadius: "10px",
                 fontSize: "12px",
-                color: "oklch(var(--foreground))",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                color: "var(--foreground)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
               }}
-              itemStyle={{ color: "oklch(var(--primary))", fontWeight: 600 }}
-              labelStyle={{ color: "oklch(var(--muted-foreground))", marginBottom: "4px" }}
+              itemStyle={{ color: "var(--primary)", fontWeight: 600 }}
+              labelStyle={{ color: "var(--muted-foreground)", marginBottom: "4px" }}
               formatter={(value: any) => [`${Math.round(Number(value))}%`, "Score"]}
             />
             <Area
               type="monotone"
               dataKey="score"
-              stroke="oklch(var(--primary))"
+              stroke="var(--primary)"
               strokeWidth={2}
               fill="url(#scoreGradient)"
-              dot={{ r: 3, fill: "oklch(var(--primary))", strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: "oklch(var(--primary))", stroke: "oklch(var(--background))", strokeWidth: 2 }}
+              dot={{ r: 3, fill: "var(--primary)", strokeWidth: 0 }}
+              activeDot={{ r: 5, fill: "var(--primary)", stroke: "var(--background)", strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>

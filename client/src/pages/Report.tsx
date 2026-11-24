@@ -33,7 +33,7 @@ function CompetencyRing({ label, value, color }: { label: string; value: number;
         <ResponsiveContainer width="100%" height="100%">
           <RadialBarChart cx="50%" cy="50%" innerRadius="68%" outerRadius="100%" data={data} startAngle={90} endAngle={-270} barSize={7}>
             <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-            <RadialBar dataKey="value" angleAxisId={0} background={{ fill: "oklch(var(--secondary))" }} cornerRadius={4} />
+            <RadialBar dataKey="value" angleAxisId={0} background={{ fill: "var(--secondary)" }} cornerRadius={4} />
           </RadialBarChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center">
@@ -51,7 +51,7 @@ function ScoreBadge({ label, value }: { label: string; value: number }) {
   const color = pct >= 70 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-red-400";
   return (
     <div className="rounded-xl border border-border/80 bg-card p-4 text-center shadow-xs">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className={`mt-2 text-2xl font-bold font-mono tabular-nums ${color}`}>{pct}%</p>
     </div>
   );
@@ -160,10 +160,10 @@ export default function Report() {
   };
 
   const competencies = [
-    { label: "Technical", value: report.technicalScore, color: "oklch(var(--primary))" },
-    { label: "Reasoning", value: report.reasoningScore, color: "oklch(var(--brand-violet))" },
-    { label: "Communication", value: report.communicationScore, color: "oklch(var(--brand-mint))" },
-    { label: "Overall", value: report.overallScore, color: "oklch(var(--chart-5))" },
+    { label: "Technical", value: report.technicalScore, color: "var(--primary)" },
+    { label: "Reasoning", value: report.reasoningScore, color: "var(--brand-violet)" },
+    { label: "Communication", value: report.communicationScore, color: "var(--brand-mint)" },
+    { label: "Overall", value: report.overallScore, color: "var(--chart-5)" },
   ];
 
   return (
@@ -178,7 +178,7 @@ export default function Report() {
             </Link>
             <div className="flex items-center gap-2 mb-1">
               <Sparkles size={14} className="text-primary" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Executive Performance Scorecard</span>
+              <span className="text-xs font-semibold text-muted-foreground">Executive Performance Scorecard</span>
             </div>
             <h1 className="text-2xl font-semibold tracking-tight">Interview Report</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -256,7 +256,7 @@ export default function Report() {
               </p>
             ) : (
               <p className="text-[13px] text-muted-foreground leading-relaxed">
-                Speaking pace: <span className="font-mono font-semibold text-foreground">N/A — insufficient data</span>.
+                Speaking pace: <span className="font-mono font-semibold text-foreground">N/A (insufficient data)</span>.
               </p>
             )}
           </div>
@@ -315,7 +315,7 @@ export default function Report() {
                   <div key={q._id} className="rounded-xl border border-border/80 bg-card overflow-hidden shadow-xs">
                     {/* Question Header */}
                     <div className="flex items-center justify-between border-b border-border/60 bg-secondary/30 px-5 py-2.5">
-                      <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground font-mono">
+                      <span className="text-xs font-semibold text-muted-foreground font-mono">
                         Q{idx + 1} {q.isFollowUp && <span className="ml-1 text-amber-500 font-sans">(Follow-up)</span>}
                       </span>
                       <span className="text-[11px] font-medium text-muted-foreground capitalize bg-secondary px-2 py-0.5 rounded-md border border-border/50">
@@ -330,7 +330,7 @@ export default function Report() {
                       {/* Your Answer */}
                       <div className="rounded-lg bg-background p-3.5 border border-border/50 space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Your Response</p>
+                          <p className="text-xs font-medium text-muted-foreground">Your Response</p>
                           {hasAnswer && q.answer.responseTime && (
                             <div className="flex items-center gap-1">
                               <Clock size={11} className="text-muted-foreground/50" />

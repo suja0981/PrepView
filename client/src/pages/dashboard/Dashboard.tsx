@@ -97,7 +97,7 @@ export default function Dashboard() {
           </Link>
           <Link
             to="/interview/create"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 sm:px-3.5 py-2 text-[13px] font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md hover:shadow-primary/15"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 sm:px-3.5 py-2 text-[13px] font-medium text-primary-foreground transition-[background-color,transform] duration-150 hover:bg-primary/90 active:scale-[0.985]"
           >
             <Plus size={14} />
             <span className="hidden sm:inline">New Interview</span>
@@ -132,7 +132,7 @@ export default function Dashboard() {
               <Zap size={14} className="text-primary" />
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-foreground">Unlock voice, DSA & unlimited interviews</p>
+              <p className="text-[13px] font-semibold text-foreground">Voice, DSA & unlimited interviews</p>
               <p className="text-[12px] text-muted-foreground">Upgrade to Premium for $9/month</p>
             </div>
           </div>
@@ -158,7 +158,7 @@ export default function Dashboard() {
               <Zap size={14} className="text-brand-violet" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">Recommended next</p>
+              <p className="text-xs font-medium text-muted-foreground">Recommended next</p>
               <p className="text-[13px] text-foreground mt-0.5 truncate">{recommendation.text}</p>
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function Dashboard() {
                 to="/interviews"
                 className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
               >
-                View all →
+                View all
               </Link>
             )}
           </div>

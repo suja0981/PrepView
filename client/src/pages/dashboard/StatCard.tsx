@@ -20,7 +20,7 @@ export default function StatCard({ title, value, icon, subtext, accent }: StatCa
       className="group rounded-xl border border-border bg-card p-4 sm:p-5 transition-colors hover:bg-secondary/20"
     >
       <div className="flex items-center justify-between">
-        <p className="text-[11px] sm:text-[12px] font-medium uppercase tracking-wider text-muted-foreground truncate pr-2">
+        <p className="text-xs font-medium text-muted-foreground truncate pr-2">
           {title}
         </p>
         <span className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${

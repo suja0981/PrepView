@@ -104,14 +104,14 @@ function ScoreMeter({ score }: { score: number }) {
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="relative flex items-center justify-center">
-        <svg width="112" height="112" viewBox="0 0 112 112" className="-rotate-90">
+        <svg width="112" height="112" viewBox="0 0 112 112" className="-rotate-90" aria-hidden="true">
           <circle cx="56" cy="56" r={r} fill="none" strokeWidth="7" className="stroke-border/60" />
           <circle
             cx="56" cy="56" r={r} fill="none" strokeWidth="7"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            className={`${ringColor} transition-all duration-1000 ease-out`}
+            className={`${ringColor} transition-[stroke-dashoffset] duration-1000 ease-out`}
           />
         </svg>
         <div className="absolute flex flex-col items-center">
@@ -226,11 +226,8 @@ export default function ResumeAnalyzer() {
         <FadeIn>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-                Analysis complete
-              </p>
               <h1 className="text-2xl font-semibold tracking-tight">Resume vs JD Report</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{resumeFile?.name}</p>
+              <p className="mt-1 text-sm text-muted-foreground">Analysis complete: {resumeFile?.name}</p>
             </div>
             <button
               onClick={reset}
@@ -331,7 +328,7 @@ export default function ResumeAnalyzer() {
           <FadeIn delay={0.18}>
             <SectionCard title="Likely interview questions" icon={<HelpCircle size={15} />}>
               <p className="text-[12px] text-muted-foreground -mt-1">
-                Based on the JD and your profile — practice these before the interview.
+                Based on the JD and your profile, practice these before the interview.
               </p>
               <ol className="space-y-2.5">
                 {result.possibleQuestions.map((q, i) => (
@@ -398,7 +395,7 @@ export default function ResumeAnalyzer() {
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
               onClick={() => !resumeFile && fileRef.current?.click()}
-              className={`relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed transition-all cursor-pointer min-h-[200px] ${
+              className={`relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed transition-colors cursor-pointer min-h-[200px] ${
                 dragging
                   ? "border-primary bg-primary/5"
                   : resumeFile
@@ -455,9 +452,9 @@ export default function ResumeAnalyzer() {
             <textarea
               value={jdText}
               onChange={(e) => setJdText(e.target.value)}
-              placeholder="Paste the full job description here — requirements, responsibilities, preferred skills..."
+              placeholder="Paste the full job description here (requirements, responsibilities, preferred skills)..."
               rows={8}
-              className="w-full rounded-xl border border-border/70 bg-card px-4 py-3 text-[13px] text-foreground placeholder:text-muted-foreground/50 resize-none outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 transition-all"
+              className="w-full rounded-xl border border-border/70 bg-card px-4 py-3 text-[13px] text-foreground placeholder:text-muted-foreground/50 resize-none outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 transition-colors"
             />
             <p className="text-[11px] text-muted-foreground font-mono">{jdText.length} characters</p>
           </div>

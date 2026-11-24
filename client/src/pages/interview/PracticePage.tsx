@@ -70,7 +70,7 @@ export default function PracticePage() {
       {/* Interview Modes */}
       <section className="space-y-4">
         <FadeIn delay={0.05}>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-semibold text-muted-foreground">
             Mock Interview Modes
           </p>
         </FadeIn>
@@ -79,7 +79,7 @@ export default function PracticePage() {
           {features.map(({ id, href, available, icon: Icon, label, tag, tagStyle, desc, bullets, cta, ctaStyle }) => (
             <StaggerItem key={id}>
               <div
-                className={`group relative flex flex-col rounded-2xl border bg-card overflow-hidden transition-all duration-200 shadow-xs ${
+                className={`group relative flex flex-col rounded-2xl border bg-card overflow-hidden transition-[border-color,box-shadow] duration-200 shadow-xs ${
                   available
                     ? "border-border/80 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5"
                     : "border-border opacity-70"
@@ -133,7 +133,7 @@ export default function PracticePage() {
       {/* AI Tools */}
       <section className="space-y-4">
         <FadeIn delay={0.12}>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-semibold text-muted-foreground">
             AI Tools
           </p>
         </FadeIn>
@@ -143,7 +143,7 @@ export default function PracticePage() {
             <StaggerItem key={href}>
               <Link
                 to={href}
-                className="group flex items-start gap-4 rounded-2xl border border-border/80 bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 shadow-xs"
+                className="group flex items-start gap-4 rounded-2xl border border-border/80 bg-card p-5 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 shadow-xs"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
                   <Icon size={18} className="text-primary" />

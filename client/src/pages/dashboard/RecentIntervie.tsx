@@ -46,7 +46,7 @@ export default function RecentInterviews({ interviews }: Props) {
           >
             <Link
               to={href}
-              className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3 transition-all hover:bg-secondary/30 hover:border-border/80"
+              className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3 transition-[background-color,border-color] duration-150 hover:bg-secondary/40 hover:border-border/90"
             >
               {/* Mode icon */}
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">

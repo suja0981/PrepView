@@ -48,7 +48,7 @@ function MicPulse({ isListening }: { isListening: boolean }) {
         </>
       )}
       <div
-        className={`relative flex h-16 w-16 items-center justify-center rounded-full border-2 transition-all duration-300 ${
+        className={`relative flex h-16 w-16 items-center justify-center rounded-full border-2 transition-colors duration-300 ${
           isListening
             ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
             : "border-border bg-card text-muted-foreground"
@@ -67,7 +67,7 @@ function ScoreBadge({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
       <span className={`text-lg font-bold tabular-nums font-mono ${color}`}>{pct}%</span>
-      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</span>
+      <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
     </div>
   );
 }
@@ -98,12 +98,12 @@ function VoiceFeedbackPanel({
       className="mx-auto max-w-xl px-4 sm:px-6 py-8 sm:py-10 space-y-5"
     >
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-          Answer {questionNumber} Evaluated
-        </p>
         <h2 className="text-lg font-semibold tracking-tight">
-          {isStrong ? "Strong answer!" : isMid ? "Decent answer" : "Needs improvement"}
+          {isStrong ? "Strong answer" : isMid ? "Decent answer" : "Needs improvement"}
         </h2>
+        <p className="text-xs font-medium text-muted-foreground mt-0.5">
+          Answer {questionNumber} evaluated
+        </p>
       </div>
 
       {/* Score strip */}
@@ -145,7 +145,7 @@ function VoiceFeedbackPanel({
             ? <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
             : <AlertCircle size={14} className="text-amber-500 shrink-0" />
           }
-          <p className="text-[12px] font-semibold text-foreground uppercase tracking-wider">AI Feedback</p>
+          <p className="text-xs font-semibold text-foreground">AI Feedback</p>
         </div>
         <p className="text-[13px] text-muted-foreground leading-relaxed">{evaluation.feedback}</p>
       </div>
@@ -290,7 +290,7 @@ export default function Interview() {
 
           <div className="text-[13px] text-muted-foreground space-y-1.5 border-t border-border pt-4">
             <p>• Read the question on screen, then speak your answer</p>
-            <p>• Speak clearly — at least 5 words required to submit</p>
+            <p>• Speak clearly (at least 5 words required to submit)</p>
             <p>• You will see AI feedback after each answer</p>
             <p>• Weak answers will get a targeted follow-up question</p>
           </div>
@@ -336,6 +336,9 @@ export default function Interview() {
             </div>
             <button
               type="button"
+              role="switch"
+              aria-checked={ttsEnabled}
+              aria-label="Read questions aloud"
               onClick={() => setTtsEnabled((v) => !v)}
               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${ttsEnabled ? "bg-primary" : "bg-secondary border border-border"}`}
             >
@@ -379,15 +382,15 @@ export default function Interview() {
       {/* Question card */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         {/* Progress bar */}
-        <div className="w-full bg-secondary h-1">
+        <div className="w-full bg-secondary h-1 overflow-hidden">
           <div
-            className="bg-primary h-full transition-all duration-300"
-            style={{ width: `${Math.min(100, Math.max(10, (questionNumber / 10) * 100))}%` }}
+            className="bg-primary h-full origin-left transition-transform duration-300"
+            style={{ transform: `scaleX(${Math.min(1, Math.max(0.1, questionNumber / 10))})` }}
           />
         </div>
         <div className="flex items-center justify-between border-b border-border px-5 py-2.5">
           <div className="flex items-center gap-2">
-            <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground font-mono">
+            <span className="text-xs font-medium text-muted-foreground font-mono">
               Question {questionNumber} of 10
             </span>
             {currentQuestion?.isFollowUp && (
@@ -408,7 +411,7 @@ export default function Interview() {
         <MicPulse isListening={isListening} />
         <p className="text-[12px] text-muted-foreground text-center">
           {status === "listening"
-            ? isListening ? "Listening — speak your answer..." : "Starting microphone..."
+            ? isListening ? "Listening, speak your answer..." : "Starting microphone..."
             : "Evaluating with AI..."}
         </p>
       </div>
@@ -419,7 +422,7 @@ export default function Interview() {
         return (
           <div className="rounded-xl border border-border bg-card p-5 space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Transcript</p>
+              <p className="text-xs font-medium text-muted-foreground">Transcript</p>
               
               <div className="flex items-center gap-2">
                 {/* Live WPM badge */}
@@ -450,8 +453,8 @@ export default function Interview() {
             {/* Progress bar */}
             <div className="h-1 w-full rounded-full bg-secondary overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-300 ${isAnswerReady ? "bg-emerald-500" : "bg-primary/50"}`}
-                style={{ width: `${Math.min((spokenWordCount / 10) * 100, 100)}%` }}
+                className={`h-full rounded-full origin-left transition-[transform,background-color] duration-300 ${isAnswerReady ? "bg-emerald-500" : "bg-primary/50"}`}
+                style={{ transform: `scaleX(${Math.min(spokenWordCount / 10, 1)})` }}
               />
             </div>
 

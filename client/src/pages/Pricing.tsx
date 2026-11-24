@@ -176,7 +176,7 @@ export default function Pricing() {
             Level up your prep
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-            Get unlimited interviews, voice mode, and every AI tool — for less than a coffee a week.
+            Get unlimited interviews, voice mode, and every AI tool for less than a coffee a week.
           </p>
         </div>
       </FadeIn>
@@ -186,9 +186,9 @@ export default function Pricing() {
 
         {/* Free Card */}
         <StaggerItem>
-          <div className={`relative flex flex-col rounded-2xl border bg-card p-6 space-y-5 transition-all ${!isPremium ? "border-border" : "border-border/60 opacity-60"}`}>
+          <div className={`relative flex flex-col rounded-2xl border bg-card p-6 space-y-5 transition-colors ${!isPremium ? "border-border" : "border-border/60 opacity-60"}`}>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Free</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-1">Free</p>
               <div className="flex items-end gap-1">
                 <span className="text-4xl font-bold tracking-tight font-mono">$0</span>
                 <span className="text-sm text-muted-foreground mb-1">/month</span>
@@ -221,7 +221,7 @@ export default function Pricing() {
 
         {/* Premium Card */}
         <StaggerItem>
-          <div className={`relative flex flex-col rounded-2xl border-2 bg-card p-6 space-y-5 transition-all shadow-xl ${isPremium ? "border-amber-500/50 shadow-amber-500/5" : "border-primary shadow-primary/10"}`}>
+          <div className={`relative flex flex-col rounded-2xl border-2 bg-card p-6 space-y-5 transition-[border-color,box-shadow] shadow-xl ${isPremium ? "border-amber-500/50 shadow-amber-500/5" : "border-primary shadow-primary/10"}`}>
 
             {/* Badges */}
             {!isPremium && (
@@ -240,7 +240,7 @@ export default function Pricing() {
             )}
 
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-1">Premium</p>
+              <p className="text-xs font-semibold text-primary mb-1">Premium</p>
               <div className="flex items-end gap-1">
                 <span className="text-4xl font-bold tracking-tight font-mono">$9</span>
                 <span className="text-sm text-muted-foreground mb-1">/month</span>
