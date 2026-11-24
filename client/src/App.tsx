@@ -1,4 +1,12 @@
+import { useEffect } from "react";
+import { api } from "@/api/axios";
+
 function App() {
+  useEffect(() => {
+    // Cold-start ping to wake up the backend
+    api.get("/health").catch(() => {});
+  }, []);
+
   return (
     <main className="app-shell">
       <section className="hero-card">

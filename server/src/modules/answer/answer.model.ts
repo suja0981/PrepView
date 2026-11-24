@@ -31,6 +31,8 @@ const answerSchema = new Schema(
   },
 );
 
+answerSchema.index({ interviewId: 1 });
+
 export type Answer = InferSchemaType<typeof answerSchema>;
 
 export const AnswerModel = model("Answer", answerSchema);
