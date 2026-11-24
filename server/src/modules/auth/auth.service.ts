@@ -1,8 +1,10 @@
+import crypto from "crypto";
 import { authRepository } from "./auth.repository";
 import { hashPassword, comparePassword } from "../../shared/utils/password";
 import { generateToken } from "../../shared/utils/jwt";
 import type { LoginInput, RegisterInput } from "./auth.validation";
 import { AppError } from "../../shared/errors/app-error";
+import { sendVerificationEmail } from "../../shared/utils/mail";
 
 class AuthService {
   async register(data: RegisterInput) {
@@ -13,9 +15,19 @@ class AuthService {
 
     const hashedPassword = await hashPassword(data.password);
 
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     const user = await authRepository.create({
       ...data,
       password: hashedPassword,
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: verificationExpires,
+    });
+
+    // Send verification email asynchronously
+    sendVerificationEmail(user.email, verificationToken).catch((err) => {
+      console.error("Failed to send verification email:", err);
     });
 
     const token = generateToken({
@@ -96,6 +108,40 @@ class AuthService {
 
     // New user
     return authRepository.createOAuthUser(profile);
+  }
+
+  async verifyEmail(token: string) {
+    if (!token) {
+      throw new AppError("Verification token is required.", 400);
+    }
+
+    const user = await authRepository.findByVerificationToken(token);
+    if (!user) {
+      throw new AppError("Verification link is invalid or has expired.", 400);
+    }
+
+    await authRepository.markEmailVerified(user.id);
+    return user;
+  }
+
+  async resendVerificationEmail(userId: string) {
+    const user = await authRepository.findById(userId);
+    if (!user) {
+      throw new AppError("User not found.", 404);
+    }
+
+    if (user.isEmailVerified) {
+      throw new AppError("Email is already verified.", 400);
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await authRepository.setVerificationToken(userId, verificationToken, verificationExpires);
+
+    await sendVerificationEmail(user.email, verificationToken);
+
+    return { success: true, message: "Verification email sent successfully." };
   }
 }
 

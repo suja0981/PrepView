@@ -3,6 +3,11 @@ export interface User {
   name: string;
   email: string;
   role?: string;
+  plan?: "free" | "premium";
+  planExpiresAt?: string | null;
+  isEmailVerified?: boolean;
+  googleId?: string | null;
+  avatar?: string | null;
 }
 
 export interface LoginRequest {

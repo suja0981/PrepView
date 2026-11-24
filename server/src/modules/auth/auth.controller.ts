@@ -45,7 +45,28 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response) =
       role: user.role,
       plan: user.plan,
       planExpiresAt: user.planExpiresAt ?? null,
+      isEmailVerified: user.isEmailVerified ?? false,
+      googleId: user.googleId ?? null,
+      avatar: user.avatar ?? null,
     },
+  });
+});
+
+export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+  const token = req.params.token as string;
+  try {
+    await authService.verifyEmail(token);
+    res.redirect(`${env.CLIENT_URL}/dashboard?verified=true`);
+  } catch (err: any) {
+    res.redirect(`${env.CLIENT_URL}/dashboard?verified=failed`);
+  }
+});
+
+export const resendVerification = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.resendVerificationEmail(req.user!.userId);
+  return res.status(200).json({
+    success: true,
+    message: result.message,
   });
 });
 

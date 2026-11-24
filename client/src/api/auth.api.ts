@@ -20,3 +20,8 @@ export const logout = async () => {
   const res = await api.post("/auth/logout");
   return res.data;
 };
+
+export const resendVerificationEmail = async () => {
+  const res = await api.post<{ success: boolean; message: string }>("/auth/resend-verification");
+  return res.data;
+};

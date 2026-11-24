@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getCurrentUser, login, logout, register } from "./auth.controller";
+import { getCurrentUser, login, logout, register, verifyEmail, resendVerification } from "./auth.controller";
 import { validate } from "../../shared/middleware/validate";
 import { registerSchema, loginSchema } from "./auth.validation";
 import { authenticate } from "../../shared/middleware/auth.middleware";
@@ -17,6 +17,10 @@ authRouter.post("/login", authRateLimit, validate(loginSchema), login);
 authRouter.get("/me", authenticate, getCurrentUser);
 
 authRouter.post("/logout", authenticate, logout);
+
+authRouter.get("/verify-email/:token", verifyEmail);
+
+authRouter.post("/resend-verification", authenticate, resendVerification);
 
 authRouter.get("/google", (_req, res) => {
   const url = buildGoogleAuthUrl();

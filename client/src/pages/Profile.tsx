@@ -98,7 +98,18 @@ export default function Profile() {
           </div>
           <div>
             <p className="text-sm font-medium">{user?.name}</p>
-            <p className="text-[12px] text-muted-foreground">{user?.email}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[12px] text-muted-foreground">{user?.email}</p>
+              {user?.isEmailVerified ? (
+                <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-medium">
+                  Verified
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-medium">
+                  Unverified
+                </span>
+              )}
+            </div>
           </div>
           {user?.plan === "premium" ? (
             <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">

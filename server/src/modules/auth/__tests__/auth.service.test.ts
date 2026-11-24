@@ -9,7 +9,14 @@ vi.mock("../auth.repository", () => ({
     findByEmail: vi.fn(),
     findById: vi.fn(),
     create: vi.fn(),
+    findByVerificationToken: vi.fn(),
+    setVerificationToken: vi.fn(),
+    markEmailVerified: vi.fn(),
   },
+}));
+
+vi.mock("../../../shared/utils/mail", () => ({
+  sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../../../shared/utils/password", () => ({
@@ -52,13 +59,76 @@ describe("AuthService", () => {
         password: "Password123",
       });
 
-      expect(authRepository.create).toHaveBeenCalledWith({
-        name: "Alex",
-        email: "alex@example.com",
-        password: "hashed_secret_123",
-      });
+      expect(authRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "Alex",
+          email: "alex@example.com",
+          password: "hashed_secret_123",
+          emailVerificationToken: expect.any(String),
+          emailVerificationExpires: expect.any(Date),
+        }),
+      );
       expect(result.token).toBe("mocked_jwt_token_456");
       expect(result.user.id).toBe("user_100");
+    });
+  });
+
+  describe("verifyEmail", () => {
+    it("should throw AppError 400 if token is invalid or expired", async () => {
+      vi.mocked(authRepository.findByVerificationToken).mockResolvedValue(null);
+
+      await expect(authService.verifyEmail("invalid_token")).rejects.toThrowError(
+        new AppError("Verification link is invalid or has expired.", 400),
+      );
+    });
+
+    it("should mark email verified when valid token is provided", async () => {
+      vi.mocked(authRepository.findByVerificationToken).mockResolvedValue({
+        id: "user_1",
+        email: "alex@example.com",
+      } as any);
+
+      const result = await authService.verifyEmail("valid_token");
+      expect(authRepository.markEmailVerified).toHaveBeenCalledWith("user_1");
+      expect(result.id).toBe("user_1");
+    });
+  });
+
+  describe("resendVerificationEmail", () => {
+    it("should throw AppError 404 if user not found", async () => {
+      vi.mocked(authRepository.findById).mockResolvedValue(null);
+
+      await expect(authService.resendVerificationEmail("nonexistent_id")).rejects.toThrowError(
+        new AppError("User not found.", 404),
+      );
+    });
+
+    it("should throw AppError 400 if email is already verified", async () => {
+      vi.mocked(authRepository.findById).mockResolvedValue({
+        id: "user_1",
+        email: "alex@example.com",
+        isEmailVerified: true,
+      } as any);
+
+      await expect(authService.resendVerificationEmail("user_1")).rejects.toThrowError(
+        new AppError("Email is already verified.", 400),
+      );
+    });
+
+    it("should generate a new token and dispatch email if unverified", async () => {
+      vi.mocked(authRepository.findById).mockResolvedValue({
+        id: "user_1",
+        email: "alex@example.com",
+        isEmailVerified: false,
+      } as any);
+
+      const result = await authService.resendVerificationEmail("user_1");
+      expect(authRepository.setVerificationToken).toHaveBeenCalledWith(
+        "user_1",
+        expect.any(String),
+        expect.any(Date),
+      );
+      expect(result.success).toBe(true);
     });
   });
 

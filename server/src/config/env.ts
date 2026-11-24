@@ -33,6 +33,12 @@ const envSchema = z.object({
   // Google OAuth
   GOOGLE_CLIENT_ID: z.string().optional().default(""),
   GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
+  // SMTP Email Configuration (Optional - falls back to dev console output)
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().optional().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().optional().default("PrepView <noreply@prepview.io>"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

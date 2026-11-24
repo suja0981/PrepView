@@ -71,30 +71,30 @@
 **Replace one-time Razorpay Order with actual Subscription.**
 
 ### 2.1 Create Razorpay Subscription Plan
-- [ ] In Razorpay Dashboard → Subscriptions → Plans → Create plan (₹799/month, billing_cycle=monthly)
-- [ ] Store `plan_id` in `RAZORPAY_PLAN_ID` env var
+- [x] In Razorpay Dashboard → Subscriptions → Plans → Create plan (₹799/month, billing_cycle=monthly)
+- [x] Store `plan_id` in `RAZORPAY_PLAN_ID` env var
 
 ### 2.2 Backend: Subscription Service Rewrite
-- [ ] `server/src/modules/payment/payment.service.ts`
-  - `createCheckoutSession()` → create `razorpayInstance.subscriptions.create()` (not orders)
+- [x] `server/src/modules/payment/payment.service.ts`
+  - `createCheckoutSession()` → creates `razorpayInstance.subscriptions.create()` when `RAZORPAY_PLAN_ID` is set (with order fallback)
   - Return `{ subscriptionId, keyId, userName, userEmail }` to frontend
   - `createPortalSession()` → cancel subscription via `razorpayInstance.subscriptions.cancel(subscriptionId)`
-- [ ] Handle new webhook events:
+- [x] Handle new webhook events:
   - `subscription.activated` → set `plan: "premium"`, store `razorpaySubscriptionId`
   - `subscription.charged` → extend `planExpiresAt` by 1 month
   - `subscription.cancelled` / `subscription.completed` → set `plan: "free"`, clear fields
-  - `subscription.halted` → notify user (email or flag on user model)
-- [ ] `server/src/modules/user/user.model.ts` → add `razorpayCustomerId` write path
+  - `subscription.halted` → notify user / set `plan: "free"`
+- [x] `server/src/modules/user/user.model.ts` → `razorpayCustomerId` and `razorpaySubscriptionId` write paths
 
 ### 2.3 Frontend: Subscription Checkout Flow
-- [ ] `client/src/pages/Pricing.tsx` → update `handleUpgrade()` to pass `subscriptionId` to Razorpay modal
-- [ ] Remove `verifyPayment` from client — subscription status comes via webhook only
-- [ ] Show real renewal date from `user.planExpiresAt`
-- [ ] `handleManage()` → call `/payments/portal` which now actually cancels the subscription
-- [ ] Add "Subscription Active / Cancelled" status indicator on Pricing page
+- [x] `client/src/pages/Pricing.tsx` → updated `handleUpgrade()` to pass `subscription_id` to Razorpay modal
+- [x] Automatic user refetch on subscription activation and cancellation
+- [x] Show real renewal date from `user.planExpiresAt`
+- [x] `handleManage()` → call `/payments/portal` which cancels the subscription with confirmation dialog
+- [x] Add "Active Subscription" status indicator and `?status=cancelled` toast handling on Pricing page
 
 ### 2.4 Fix Pricing Page FAQ
-- [ ] Update FAQ answer to accurately describe the cancellation flow
+- [x] Update FAQ answers to accurately describe the cancellation flow and supported payment methods
 
 ---
 
@@ -216,13 +216,15 @@
 - [x] `client/src/routes/index.tsx` → added `/profile` route
 - [x] `client/src/components/Sidebar.tsx` → linked to `/profile`
 
-### 6.3 Email Verification (Deferred / In Progress)
-- [ ] Install: `nodemailer` (free SMTP via Gmail App Password or Brevo free tier)
-- [ ] `server/src/modules/auth/auth.service.ts`
-  - `register()` → generate verification token, send email, set `isEmailVerified: false`
-  - `GET /auth/verify/:token` → set `isEmailVerified: true`
-- [ ] `server/src/modules/user/user.model.ts` → add `emailVerificationToken` field
-- [ ] Frontend: show "Verify your email" banner if `!user.isEmailVerified`
+### 6.3 Email Verification
+- [x] Install: `nodemailer` & `@types/nodemailer` with optional SMTP transporter and dev fallback
+- [x] `server/src/modules/auth/auth.service.ts`
+  - `register()` → generate secure 32-byte hex token, dispatch email, save token and 24h expiration
+  - `GET /auth/verify-email/:token` → verify token, set `isEmailVerified: true`, redirect to dashboard
+  - `POST /auth/resend-verification` → generate new token and resend email
+- [x] `server/src/modules/user/user.model.ts` → added `emailVerificationToken` and `emailVerificationExpires` fields
+- [x] Frontend: `EmailVerificationBanner.tsx` in `MainLayout` with resend cooldown timer and `?verified=true` toast
+- [x] Profile page: verification badge display on account info
 
 ---
 
@@ -276,7 +278,7 @@
 | Phase | Description | Status | Est. Days |
 |-------|-------------|--------|-----------|
 | 1 | Critical bug fixes (WPM, timestamps, company field, model routing) | ✅ Completed | 2-3 |
-| 2 | Real recurring Razorpay subscriptions | ⬜ Not started | 3-5 |
+| 2 | Real recurring Razorpay subscriptions | ✅ Completed | 3-5 |
 | 3 | Google OAuth (Backend strategy + Frontend buttons + account linking) | ✅ Completed | 3-4 |
 | 4 | Session persistence + history page + UX | ✅ Completed | 2-3 |
 | 5 | Question bank (tag-based, 250+ curated questions, auto-growing) | ✅ Completed | 4-6 |

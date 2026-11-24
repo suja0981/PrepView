@@ -35,6 +35,14 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  emailVerificationToken: {
+    type: String,
+    default: null,
+  },
+  emailVerificationExpires: {
+    type: Date,
+    default: null,
+  },
 
   // ── Subscription ──────────────────────────────────────────────────────────
   // plan is the source of truth for feature access in the app
