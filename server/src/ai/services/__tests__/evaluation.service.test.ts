@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { evaluateAnswer } from "../evaluation.service";
-import { callGemini } from "../gemini.service";
+import { callGroqSmart } from "../llm.service";
 
-vi.mock("../gemini.service", () => ({
-  callGemini: vi.fn(),
+vi.mock("../llm.service", () => ({
+  callGroqSmart: vi.fn(),
 }));
 
 describe("evaluateAnswer AI Service", () => {
@@ -11,7 +11,7 @@ describe("evaluateAnswer AI Service", () => {
     vi.clearAllMocks();
   });
 
-  it("should pass constructed prompt to callGemini and return LLM JSON output", async () => {
+  it("should pass constructed prompt to callGroqSmart and return LLM JSON output", async () => {
     const mockAiResponse = {
       overallScore: 8,
       technicalAccuracy: 8,
@@ -21,7 +21,7 @@ describe("evaluateAnswer AI Service", () => {
       weakTopics: [],
     };
 
-    vi.mocked(callGemini).mockResolvedValue(mockAiResponse);
+    vi.mocked(callGroqSmart).mockResolvedValue(mockAiResponse);
 
     const result = await evaluateAnswer({
       question: "How would you design a URL shortener?",
@@ -31,7 +31,7 @@ describe("evaluateAnswer AI Service", () => {
       difficulty: "medium",
     });
 
-    expect(callGemini).toHaveBeenCalledTimes(1);
+    expect(callGroqSmart).toHaveBeenCalledTimes(1);
     expect(result).toEqual(mockAiResponse);
     expect(result.overallScore).toBe(8);
   });

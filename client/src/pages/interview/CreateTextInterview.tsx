@@ -56,6 +56,7 @@ export default function CreateTextInterview() {
     resolver: zodResolver(createInterviewSchema),
     defaultValues: {
       role: "",
+      company: "",
       techStacks: "",
       difficulty: "medium",
       type: "technical",
@@ -143,6 +144,18 @@ export default function CreateTextInterview() {
                   <Input placeholder="e.g. Backend Software Engineer" className="h-10 bg-background text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="company" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-foreground">
+                  Target Company <span className="text-muted-foreground font-normal">(optional)</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Google, Amazon, Stripe" className="h-10 bg-background text-sm" {...field} />
+                </FormControl>
+                <p className="text-[12px] text-muted-foreground">Tailors questions to this company's known engineering culture.</p>
               </FormItem>
             )} />
 

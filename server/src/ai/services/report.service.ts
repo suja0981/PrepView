@@ -1,4 +1,4 @@
-import { callGemini } from "./gemini.service";
+import { callGroqSmart } from "./llm.service";
 import { buildReportNarrativePrompt } from "../prompts/report.prompt";
 
 export interface InterviewReportInput {
@@ -36,7 +36,7 @@ export async function generateInterviewReport(data: InterviewReportInput) {
 
   // ── Step 2: Ask Gemini for the narrative only (summary, strengths, improvements) ──
   // We pass the pre-computed scores in so the AI's narrative stays consistent with the numbers.
-  const narrative = await callGemini(
+  const narrative = await callGroqSmart(
     buildReportNarrativePrompt({ ...data, ...scores }),
   );
 

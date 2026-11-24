@@ -5,7 +5,7 @@ export const WEAK_ANSWER_THRESHOLD = 6;
 export const CreateInterviewSchema = z.object({
   role: z.string().trim().min(2),
 
-  // company removed — replaced by role presets on the frontend
+  company: z.string().trim().max(100).optional(),
 
   techStacks: z.string().trim().optional(),
 

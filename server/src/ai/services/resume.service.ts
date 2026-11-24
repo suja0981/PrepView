@@ -1,4 +1,4 @@
-import { callGemini } from "./gemini.service";
+import { callGroqFast } from "./llm.service";
 import { buildExtractionPrompt, ResumeExtraction } from "../prompts/resume-extraction.prompt";
 import { buildFeedbackPrompt } from "../prompts/resume-feedback.prompt";
 import { calculateAtsScore } from "./ats-score.service";
@@ -20,7 +20,7 @@ export interface ResumeAnalysisResult {
 
 export async function analyzeResume(data: ResumeAnalysisInput): Promise<ResumeAnalysisResult> {
   // 1. Pull structured facts out of the resume + JD.
-  const rawExtraction = await callGemini(
+  const rawExtraction = await callGroqFast(
     buildExtractionPrompt(data.resumeText, data.jobDescription),
   );
 
@@ -37,7 +37,7 @@ export async function analyzeResume(data: ResumeAnalysisInput): Promise<ResumeAn
   const { score, matchedSkills, missingSkills } = calculateAtsScore(extraction);
 
   // 3. Generate the human-readable feedback, grounded in the facts above.
-  const feedback = await callGemini(
+  const feedback = await callGroqFast(
     buildFeedbackPrompt(extraction, matchedSkills, missingSkills),
   );
 

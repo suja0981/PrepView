@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { generateInterviewReport } from "../report.service";
-import { callGemini } from "../gemini.service";
+import { callGroqSmart } from "../llm.service";
 
-vi.mock("../gemini.service", () => ({
-  callGemini: vi.fn(),
+vi.mock("../llm.service", () => ({
+  callGroqSmart: vi.fn(),
 }));
 
 describe("generateInterviewReport AI Service", () => {
@@ -18,7 +18,7 @@ describe("generateInterviewReport AI Service", () => {
       improvements: ["Elaborate more on failure recovery and replication"],
     };
 
-    vi.mocked(callGemini).mockResolvedValue(mockNarrative);
+    vi.mocked(callGroqSmart).mockResolvedValue(mockNarrative);
 
     const inputData = {
       role: "Backend Engineer",

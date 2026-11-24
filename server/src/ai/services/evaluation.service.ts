@@ -1,4 +1,4 @@
-import { callGemini } from "./gemini.service";
+import { callGroqSmart } from "./llm.service";
 import { buildEvaluationPrompt } from "../prompts/interview.prompt";
 
 export interface EvaluateAnswerInput {
@@ -12,5 +12,5 @@ export interface EvaluateAnswerInput {
 
 export async function evaluateAnswer(data: EvaluateAnswerInput) {
   const prompt = buildEvaluationPrompt(data);
-  return callGemini(prompt);
+  return callGroqSmart(prompt);
 }
