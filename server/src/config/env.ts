@@ -28,6 +28,11 @@ const envSchema = z.object({
   RAZORPAY_PLAN_ID: z.string().default("plan_placeholder"),
   // Frontend URL — used for checkout redirects
   CLIENT_URL: z.string().default("http://localhost:5173"),
+  // Server public URL — used for OAuth redirect URIs
+  SERVER_URL: z.string().optional().default("http://localhost:4000"),
+  // Google OAuth
+  GOOGLE_CLIENT_ID: z.string().optional().default(""),
+  GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
